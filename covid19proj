@@ -31,9 +31,8 @@ FROM
   `bigquery-public-data.covid19_usafacts.summary` 
 WHERE
   date <= '2022-04-01'
----------------------------------------------------------------------In-Class----------------------------------------------------------------------------
-#Q1. Gather External Data and Perform ETL
-#1. Create a table based on the covid19_usafacts_summary table and the covid_county_population_usafacts tables
+-------------------------------------------------------------------------------------------------------------------------------------------------
+#1. Gather External Data and Perform ETL
 
 CREATE OR REPLACE TABLE  -- This is the loading part of our ETL process
   MYDB.dw_covid19        -- The dw preface stands for Data Warehouse
@@ -70,7 +69,7 @@ ORDER BY
   c19.county_name,
   c19.date
 ;
-#Q2. Create a data mart for Colorado Results...
+#Create a data mart for Colorado Results...
 CREATE OR REPLACE TABLE
   MYDB.dm_covid19_co  
 AS
@@ -83,7 +82,7 @@ ORDER BY
   county_name,
   date
 ;
-#Q3. Create a summary query that will show the total cases and deaths as of 04/01/2022 for Colorado
+#Create a summary query that will show the total cases and deaths as of 04/01/2022 for Colorado
 SELECT
   *
 FROM
