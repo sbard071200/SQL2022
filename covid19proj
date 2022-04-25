@@ -1,0 +1,111 @@
+--Cleaning the covid Table
+ALTER TABLE
+  MYDB.covid_county_population_usafacts
+ADD COLUMN IF NOT EXISTS
+  county_fips STRING
+;
+  UPDATE
+     `symmetric-aura-337805.MYDB.covid_county_population_usafacts`  
+  SET
+    county_fips =
+    CASE
+      WHEN LENGTH(CAST(countyFIPS AS STRING))=4 THEN CONCAT('0',CAST(countyFIPS AS STRING))
+      WHEN LENGTH(CAST(countyFIPS AS STRING))=1 THEN CONCAT('0000',CAST(countyFIPS AS STRING))
+      ELSE CAST(countyFIPS as STRING) END
+    WHERE
+      county_fips IS NULL
+;
+ALTER TABLE
+  `MYDB.covid_county_population_usafacts` 
+DROP COLUMN
+  countyFIPS
+;
+SELECT
+  sum(population) as totalpop
+FROM
+  `symmetric-aura-337805.MYDB.covid_county_population_usafacts` 
+;
+SELECT
+  *
+FROM
+  `bigquery-public-data.covid19_usafacts.summary` 
+WHERE
+  date <= '2022-04-01'
+---------------------------------------------------------------------In-Class----------------------------------------------------------------------------
+#Q1. Gather External Data and Perform ETL
+#1. Create a table based on the covid19_usafacts_summary table and the covid_county_population_usafacts tables
+
+CREATE OR REPLACE TABLE  -- This is the loading part of our ETL process
+  MYDB.dw_covid19        -- The dw preface stands for Data Warehouse
+AS
+SELECT
+  c19.*,
+  pop.population,
+  
+  ## This is the Transformation part of ETL. 
+  -- We will transform cases and deaths into daily totals vs running totals
+  -- Show the prior day cases and deaths with lag
+  LAG(confirmed_cases) OVER(PARTITION BY c19.state, c19.county_name ORDER BY c19.date) as priorDayCases,
+  
+  LAG(c19.deaths) OVER(PARTITION BY c19.state, c19.county_name ORDER BY c19.date) AS priorDayDeaths,
+  
+  -- Calculate daily cases and deaths
+  confirmed_cases - LAG(confirmed_cases) OVER(PARTITION BY c19.state, c19.county_name ORDER BY c19.date) as     dailyCases,
+  
+  deaths - LAG(deaths) OVER(PARTITION BY c19.state, c19.county_name ORDER BY c19.date) AS dailyDeaths
+
+ -- Gather and integrate data from external sources 
+FROM
+  `bigquery-public-data.covid19_usafacts.summary` AS c19
+  INNER JOIN
+    `symmetric-aura-337805.MYDB.covid_county_population_usafacts` as pop
+    ON 
+    c19.county_fips_code = pop.county_fips
+    AND
+    c19.state = pop.state
+WHERE
+  c19.date <= '2022-04-01'
+ORDER BY
+  c19.state,
+  c19.county_name,
+  c19.date
+;
+#Q2. Create a data mart for Colorado Results...
+CREATE OR REPLACE TABLE
+  MYDB.dm_covid19_co  
+AS
+SELECT *
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19` 
+WHERE
+  state = 'CO'
+ORDER BY
+  county_name,
+  date
+;
+#Q3. Create a summary query that will show the total cases and deaths as of 04/01/2022 for Colorado
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.MYDB.dm_covid19_co` 
+WHERE
+  date = '2022-04-01'
+ORDER BY
+  confirmed_cases DESC
+;
+---------------------------------------------------------------Data Validation----------------------------------------------------------
+SELECT
+  sum(deaths) as totdeaths,
+  sum(confirmed_cases) as totcases
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19` 
+WHERE
+  date = '2022-04-01'
+;
+SELECT
+  sum(deaths) as totdeaths,
+  sum(confirmed_cases) as totcases,
+FROM
+  `symmetric-aura-337805.MYDB.dm_covid19_co` 
+WHERE
+  date = '2022-04-01'
