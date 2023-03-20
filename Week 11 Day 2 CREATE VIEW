@@ -1,0 +1,93 @@
+--Week 11 Day 2 Typealong CREATE VIEW
+--First, write a query that will filter out certain products
+--------------------------------------------------------------------Q1. Who are all the customers that ordered a certain product?
+#We have done this before with joins
+
+----------------------------------------------Now lets create a view that will allow us to simplify the process of filtering products
+/*
+CREATE VIEW
+  `styssql.prodCustJoin`
+  AS
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  ordI.prod_id
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  INNER JOIN
+    `symmetric-aura-337805.styssql.orders` as ord
+  ON 
+    cust.cust_id = ord.cust_id 
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+  ON
+    ord.order_num = ordI.order_num 
+*/
+
+--------------------------------------------------------------------------Who are all the customers that ordered product 'RGAN01'?
+--Using a view we can reduce the query down to a few lines
+/*
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.prodCustJoin` AS prodview
+WHERE
+  prodview.prod_id = 'RGAN01'
+*/
+
+-----------------------------------------------------------------------------Another use for views, reformatting data
+--Instead of always writing concat we can create a view
+-- Concating vendor location
+/*
+CREATE VIEW
+  `styssql.vendLocations`
+AS
+SELECT
+  *,
+  concat(trim(vend.vend_name),' (', trim(vend.vend_country), ') ') as vendLoc
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.vendLocations` 
+*/
+
+
+-----------------------------------------------------------------------Another use for views is to filter out unwanted data
+--Null Emails in cust table
+/*
+CREATE VIEW
+  `symmetric-aura-337805.styssql.custemaillist`
+AS
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_email IS NOT NULL
+
+
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.custemaillist` 
+*/
+
+-----------------------------------------------------Another use for views: Calculated Fields
+--Create a view that calculates the total cost per items
+
+CREATE VIEW
+  `symmetric-aura-337805.styssql.totCost`
+AS
+SELECT
+  *,
+  round(ordI.quantity * ordI.item_price,2) as totCost 
+FROM
+  `styssql.order_items` as ordI
+  
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.totCost` 
