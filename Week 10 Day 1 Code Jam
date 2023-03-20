@@ -1,0 +1,97 @@
+--Week 10 Day 1 In Class Midterm Review
+
+--Q1. Question: What are Janis Joplin's most popular songs? 
+/*
+SELECT
+  lb.artist_name,
+  lb.track_name,
+  count(lb.listened_at) as listens
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name = 'Janis Joplin'
+GROUP BY
+  lb.artist_name,
+  lb.track_name
+ORDER BY
+  listens DESC
+*/
+
+--Q2. What were Mariah Carey's total listens as well as average listens per user? 
+/*
+SELECT DISTINCT
+  lb.artist_name,
+  (SELECT
+    count(lb.listened_at)
+   FROM
+    `listenbrainz.listenbrainz.listen` as lb
+   WHERE
+    lb.artist_name = 'Mariah Carey'
+  ) as total_Listens,
+  
+  (SELECT
+    count(distinct(lb.user_name))
+   FROM
+    `listenbrainz.listenbrainz.listen` as lb
+   WHERE
+    lb.artist_name = 'Mariah Carey'
+   ) as totalUsers,
+   
+   (SELECT
+      round(count(lb.listened_at) / COUNT(DISTINCT(lb.user_name)),2) 
+    FROM
+      `listenbrainz.listenbrainz.listen` as lb
+    WHERE
+      lb.artist_name = 'Mariah Carey'
+   ) as avg_listens
+   
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE 
+  lb.artist_name = 'Mariah Carey'
+*/
+
+--Q3. What were the total listens for each of the artists listed above? Whitney Houston, Mariah Carey, Beyonce, Dixie Chicks, Madonna, Ella Fitzgerald, Aretha Franklin, Dolly Parton, Lady Gaga, Shania Twain, and Lizzo
+#Who is the most popular female artist?
+#Based on listens?
+#Based on fans (i.e., users)?
+#Who has the highest average listens per user?
+#Answer this based on the number of listens in the listenbrainz dataset 
+/*
+SELECT
+  lb.artist_name,
+  count(lb.listened_at) as total_listens,
+  count(distinct(lb.user_name)) as fans,
+  round(count(lb.listened_at) / count(distinct(lb.user_name)),2) as avgPerUser
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name 
+  IN ('Whitney Houston', 'Mariah Carey', 'Beyonce', 'Dixie Chicks', 'Madonna', 'Ella Fitzgerald', 'Aretha Franklin', 'Dolly Parton', 'Lady Gaga', 'Shania Twain', 'Lizzo')
+GROUP BY
+  lb.artist_name
+ORDER BY
+  total_listens DESC
+*/
+
+--Q4. How many different instances of Beyonce can you find in the listenbrains data set? 
+#Given Beyonce's popularity, did you notice anything unusual about the number of listens and fans in the prior question? When filtering for "Beyonce" you should have found 20 listens and 9 fans which doesn't quite seem right for someone of Beyonce's popularity.
+/*
+SELECT DISTINCT
+  lb.artist_name 
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name LIKE '%Beyonc%'
+*/
+
+
+--Q5. How many different instances of Beyonce as a solo artist can you find? 
+
+SELECT DISTINCT
+  lb.artist_name,
+  #lb.track_name 
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name LIKE 'Beyonc_'
