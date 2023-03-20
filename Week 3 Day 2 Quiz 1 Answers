@@ -1,0 +1,34 @@
+--Q.1
+
+--Q.3
+
+--Q.5
+
+--Q.7
+
+--Q.9
+
+
+--Q.11
+/*
+SELECT DISTINCT
+h.name,
+h.season
+FROM
+`bigquery-public-data.noaa_hurricanes.hurricanes` as h
+WHERE
+(h.name LIKE 'A%' OR h.name LIKE 'B%')
+AND
+h.season = '2010'
+*/
+--Q.13
+/*
+SELECT
+  dat.visitId, dat.geoNetwork.country, dat.device.browser, dat.device.isMobile 
+FROM
+  `bigquery-public-data.google_analytics_sample.ga_sessions_20170731` as dat
+WHERE
+  dat.device.isMobile = true 
+  AND (dat.device.browser = 'Chrome' OR dat.device.browser = 'Safari')
+  AND (dat.geoNetwork.country LIKE '%Arab%' OR dat.geoNetwork.country LIKE '%United%')
+  */
