@@ -1,0 +1,155 @@
+--Quiz 4 Review
+
+--Q1. What are the customer names and emails of all customers with an order? 
+--Specifications:
+#Return a result set that shows the customer names, customer emails, and most recent order date for any customer with an order.
+#Sort the results by most recent order date
+/*
+
+SELECT
+  cust.cust_name,
+  cust.cust_email,
+  MAX(ord.order_date) AS maxDate
+FROM
+  `symmetric-aura-337805.styssql.customers`   as cust
+  INNER JOIN
+  `symmetric-aura-337805.styssql.orders`  as ord
+  on
+  cust.cust_id  = ord.cust_id
+GROUP BY
+  cust.cust_name,
+  cust.cust_email
+ORDER BY
+  maxDate DESC
+*/
+
+--Q2. What are the customer names, customer contacts, and emails of all customers without an order? 
+--Specifications:
+#Return a result set that shows the customer names, customer emails and a field that shows null values that clearly shows these customers do not have an order. 
+#Sort the results by customer name in ABC order
+
+/*
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  cust.cust_email,
+  ord.order_num
+FROM
+  `symmetric-aura-337805.styssql.customers`  as cust
+  LEFT JOIN
+  `symmetric-aura-337805.styssql.orders`  as ord
+  on
+  cust.cust_id = ord.cust_id
+WHERE
+  ord.order_date IS NULL
+ORDER BY
+  cust.cust_name DESC
+*/
+
+--Q3. What is the total order quantity for each vendor as well as the average quantity per order for each vendor? 
+--Specifications:
+#Show vendor id and name, Only include vendors with orders, Alias total quantity as vendQty, Alias average vendor order quantity as vendAvgOrdQty and round this to 2 decimal places
+#Sort the result set by total order quantity in descending order  
+
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  SUM(ordi.quantity) as vendQty,
+  COUNT(DISTINCT ordi.order_num) AS vendOrders, # Include to see the number of orders
+  ROUND(SUM(ordi.quantity)/COUNT(DISTINCT ordi.order_num),2) as avgVendOrdQty
+FROM
+  `symmetric-aura-337805.styssql.vendors`  as vend
+  INNER JOIN
+   `symmetric-aura-337805.styssql.products`  as prod
+   ON
+   vend.vend_id = prod.vend_id
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items`  as ordi
+  ON
+    prod.prod_id = ordi.prod_id
+GROUP BY
+  vend.vend_id,
+  vend.vend_name
+ORDER BY
+  vendQty DESC
+
+
+--Q4. What vendors have products in our database but do not have an order yet?
+--Specifications:
+#Including the following attributes in the result set: vender id, vender name, product id and product name.
+#In addition to the above attributes, show a field in your result set that clearly shows the vendor does not have an order for these products (usually indicated with a "null" in the result set cells) 
+#Sort the results by vendor name then product name in ABC order
+
+/*
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name,
+  ordi.order_num
+FROM
+  `symmetric-aura-337805.styssql.vendors`  as vend
+  LEFT JOIN  -- We could also use an INNER JOIN here instead of filtering in WHERE
+   `symmetric-aura-337805.styssql.products`  as prod
+   ON
+   vend.vend_id = prod.vend_id
+  LEFT JOIN
+    `symmetric-aura-337805.styssql.order_items`  as ordi
+  ON
+    prod.prod_id = ordi.prod_id
+WHERE
+  prod.prod_id IS NOT null  -- if we INNER JOIN vend and prod we wouldn't need this filter
+  AND
+  ordi.order_num IS NULL
+ORDER BY
+  vend.vend_name, prod.prod_name
+*/
+
+--Q5. Questions: Which vendors are missing product information (prod_ids)?
+--Specifications:
+#vender id, vender name, and a field that clearly shows these vendors are missing product information
+#Sort the results by vendor name in reverse ABC order
+
+/*
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id
+FROM
+  `symmetric-aura-337805.styssql.vendors`  as vend
+  LEFT JOIN 
+  `symmetric-aura-337805.styssql.products`  as prod
+   ON
+   vend.vend_id = prod.vend_id
+WHERE
+  prod.prod_id IS NULL
+ORDER BY
+  vend.vend_name DESC
+*/
+
+--Q6. Questions: What are the total order quantities for each of the products we sell as well as the total order quantities for the entire company?  
+--Specifications:
+#Show product id and name, Alias product quantity as 'prodQty', Alias total quantity as 'totQty'
+#Sort the results in descending order by quantity 
+/*
+SELECT
+  prod.prod_id,
+  prod.prod_name,
+  SUM(ordi.quantity) as prodQty,
+  (SELECT
+    SUM(quantity)
+   FROM
+   `symmetric-aura-337805.styssql.order_items` 
+  ) AS totQty 
+FROM
+  `symmetric-aura-337805.styssql.products`  as prod
+  INNER JOIN
+  `symmetric-aura-337805.styssql.order_items`  as ordi
+  ON
+  prod.prod_id = ordi.prod_id
+GROUP BY
+  prod.prod_id,
+  prod.prod_name
+ORDER BY
+  prodQty DESC
+*/
