@@ -1,0 +1,83 @@
+#Intro to SQL Advanced Data Filtering
+
+--1. What are all the products with a vendor id of DLL01 and a price of $4 or less?
+/*
+SELECT
+  prod.prod_id,
+  prod.prod_name,
+  prod.prod_price,
+  prod.vend_id
+FROM
+`symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.vend_id = 'DLL01' AND prod.prod_price <= 4
+*/
+
+--2. What are all the products from vendors with ids of DLL01 or BRS01? 
+/*
+SELECT
+  prod.vend_id, prod.prod_id,prod.prod_name 
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.vend_id = 'DLL01' OR prod.vend_id = 'BRS01'
+  */
+--2.1 Answer Q2 using the IN Operator
+/*
+SELECT
+  prod.vend_id, prod.prod_id, prod.prod_name 
+FROM
+`symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.vend_id IN ('DLL01', 'BRS01')
+ */
+
+--3. What are all the products we source from vendors with ids of DLL01 and BRS01 that have prices above $10? 
+/*
+SELECT
+prod.vend_id, 
+prod.prod_id, 
+prod.prod_name, 
+prod.prod_price 
+FROM
+`symmetric-aura-337805.styssql.products` as prod
+WHERE
+prod.vend_id IN ('DLL01','BRS01') AND prod.prod_price > 10
+*/
+--parenthesis and order of operations remember
+
+
+--4. What are all the products from vendors excluding those with the id of DLL01? 
+/*
+SELECT
+  prod.vend_id, prod.prod_id, prod.prod_name, prod.prod_price 
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  NOT prod.vend_id = 'DLL01'
+  */
+--5. What are all the products that start with “Fish”?
+/*
+SELECT
+  prod.vend_id, prod.prod_id, prod.prod_name, prod.prod_price 
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.prod_name LIKE 'Fish%'
+*/
+--6. What are all our “bean bag” products and prices of each? 
+/*
+SELECT
+  prod.vend_id, prod.prod_id, prod.prod_name, prod.prod_price 
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.prod_name  LIKE '%bean bag%'
+ */
+--7. What are all our teddy bear products that have a one or two digit inch dimension to start the name? 
+SELECT
+prod.vend_id, prod.prod_id, prod.prod_name, prod.prod_price 
+FROM
+ `symmetric-aura-337805.styssql.products` as prod 
+WHERE
+  prod.prod_name LIKE '_ inch%' OR prod.prod_name LIKE '__ inch%'
