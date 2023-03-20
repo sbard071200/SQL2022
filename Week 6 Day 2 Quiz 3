@@ -1,0 +1,119 @@
+--Q1. Which customer(s) (using cust_id) have purchased an item priced greater than $11? (select all that apply)
+/*
+SELECT
+  cust_id
+FROM
+  styssql.orders
+WHERE
+  order_num IN
+  (SELECT order_num
+   FROM styssql.order_items
+   WHERE
+   item_price > 11
+   )
+*/
+
+--Q2.Main Question: In 2020, what was the average tip amount for payment types "Credit Card", "Cash", and "Mobile"?
+/*
+SELECT
+  payment_type,
+  ROUND(AVG(tips),2) AS avgTip,
+  (SELECT ROUND(AVG(tips),2)
+  FROM   `bigquery-public-data.chicago_taxi_trips.taxi_trips` 
+  WHERE
+  EXTRACT(year FROM trip_end_timestamp) = 2020
+  ) as ovAvg
+FROM
+  `bigquery-public-data.chicago_taxi_trips.taxi_trips` 
+WHERE
+  payment_type IN ('Credit Card','Cash','Mobile','Way2ride')
+  AND
+  EXTRACT(year FROM trip_end_timestamp) = 2020
+GROUP BY
+  payment_type
+*/
+
+--Q3. What is the overall average wind speed and the average wind speed for ship courses 4 and 6? (rounded to two decimal places) 
+/*
+SELECT
+  ship_course,
+  ROUND(AVG(wind_speed),2) as shipAvgSpeed,
+  ROUND((SELECT AVG(wind_speed)
+  FROM
+    `bigquery-public-data.noaa_icoads.icoads_core_2017`
+  ),2) as ovAvgwindSpeed  
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2017`
+WHERE
+  ship_course in (4,6)
+GROUP BY
+  ship_course;
+*/
+
+--Q4. What was the difference in the 2021 average tip amount and the 2020 average tip amount? (2021 minus 2020)
+/*
+SELECT
+  ROUND(AVG(c.tips),2) AS avg_tip_20,
+  
+  -- sub to get the average for 2021
+  ROUND((SELECT
+    AVG(tips)
+  FROM
+  `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE
+    EXTRACT(year FROM trip_end_timestamp) = 2021 
+   ),2) AS avg_tip_21,
+   
+   -- Calculate the difference
+   
+  ROUND((SELECT
+    AVG(tips)
+  FROM
+  `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+  WHERE
+    EXTRACT(year FROM trip_end_timestamp) = 2021 
+   )
+   - AVG(c.tips),2)
+   AS diff_21_20
+   
+FROM
+  `bigquery-public-data.chicago_taxi_trips.taxi_trips` as c
+WHERE
+  EXTRACT(year FROM c.trip_end_timestamp) = 2020
+*/
+
+--Q5.
+SELECT
+trips.payment_type,
+ROUND(avg(trips.tips),2) as pmt_avg_tip,
+ROUND(avg(trips.trip_miles), 2) as pmt_avg_miles,
+  
+ -- Sub to get the overall average trip miles 
+  (SELECT
+    round(avg(tips),2)
+   FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+   WHERE
+     EXTRACT(year from trip_end_timestamp) = 2020 
+   ) as ov_avg_tips,
+   
+ -- Sub to get the overall average tips(or fare)
+   (SELECT
+    round(avg(trip_miles))
+    FROM
+      `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+    WHERE
+      EXTRACT(year from trip_end_timestamp) = 2020
+    ) as ov_avg_miles
+
+FROM
+  `bigquery-public-data.chicago_taxi_trips.taxi_trips`as trips
+WHERE
+  EXTRACT(year from trip_end_timestamp) = 2020
+GROUP BY
+  trips.payment_type  
+HAVING
+  pmt_avg_tip > ov_avg_tips
+  AND
+  pmt_avg_miles > ov_avg_miles
+  ORDER BY
+  payment_type ASC
