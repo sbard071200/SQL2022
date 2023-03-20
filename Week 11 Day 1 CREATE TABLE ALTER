@@ -1,0 +1,70 @@
+--Week 11 Day 1 Typealong CREATE TABLE ALTER
+
+-----------------------------------------------------First lets create a customer table
+/*
+CREATE TABLE
+  `MYDB.customer`
+(
+custID INT64 NOT NULL,
+custFname STRING NOT NULL,
+custLname STRING NOT NULL,
+custEmail STRING,
+custBalance INT64
+)
+*/
+
+------------------------------------------------Now lets Create an invoice table
+/*
+CREATE TABLE
+  `MYDB.invoice`
+(
+invNumber INT64 NOT NULL,
+custID INT64 NOT NULL,
+invDate DATE NOT NULL,
+)
+*/
+
+-----------------------------------------Now lets use ALTER TABLE to add a custPhone to the customers table
+#not all DBMS allow for deleting added tables
+/*
+ALTER TABLE
+  `MYDB.customer`
+ADD COLUMN
+  custPhone STRING
+*/
+
+-------------------------------------------------------Now lets add a description to the table as well
+--We can also use GUIs to change stuff like this
+/*
+ALTER TABLE
+  `MYDB.customer`
+SET OPTIONS
+  (description = 'This is a tutorial table to learn SQL DDL statements in BigQuery')
+*/
+
+----------------------------------------------------------DROP COLUMN DOES NOT WORK WITH BIG QUERY
+--HERE is syntax anyway
+/*
+ALTER TABLE
+  `MYDB.customer`
+DROP COLUMN
+  custPhone
+*/
+
+------------------------------------------------------Creating table from another table with a query
+--You can do this with publicdata aswell
+/*
+CREATE TABLE
+  `MYDB.custcopy`
+  AS
+SELECT
+*
+FROM
+ `styssql.customers`
+*/
+
+------------------------------------------------------DROP TABLE:Now we can delete tables
+/*
+DROP TABLE
+`MYDB.custcopy`
+*/
