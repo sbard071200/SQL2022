@@ -1,0 +1,57 @@
+--Week 14 Day 1 In-Class Exercises: Advanced Analytic Functions: ROLLUP(), CASE, Analytic/window functions
+--Q1. What were the total cases and deaths for each country in Colorado as of 04/01/2022? By county
+/*
+SELECT
+  IFNULL(county_name, 'STATE TOTAL') AS county,
+  sum(confirmed_cases) as totCases,
+  sum(deaths) as totDeaths,
+  #(SELECT SUM(dailyCases) FROM symmetric-aura-337805.MYDB.dm_covid19_co) as dailyTotalcases
+FROM
+  `symmetric-aura-337805.MYDB.dm_covid19_co` 
+WHERE
+  date = '2022-04-01'
+GROUP BY
+  ROLLUP(county_name)
+ORDER BY
+  totCases DESC
+*/
+--Q2. As of 4/1/2022 which counties in colorado are above or below the average number of Colorado county cases?
+/*
+SELECT
+  state,
+  county_name,
+  confirmed_cases,
+  --Avg Cases subquery
+  (SELECT round(avg(confirmed_cases),2) FROM `symmetric-aura-337805.MYDB.dm_covid19_co` WHERE date = '2022-04-01') as avgCases,
+   --AVG FLAG
+   CASE
+     WHEN confirmed_cases > (SELECT round(avg(confirmed_cases),2) FROM `symmetric-aura-337805.MYDB.dm_covid19_co` WHERE date = '2022-04-01')
+     THEN 'Above Avg'
+     ELSE 'Below Avg'
+   END AS Avg_Flag
+FROM
+  `symmetric-aura-337805.MYDB.dm_covid19_co`
+WHERE
+  date = '2022-04-01'
+ORDER BY
+  county_name 
+*/
+--Q3. 
+SELECT
+  county_name,
+  date,
+  dailyCases,
+  ROUND(AVG(dailyCases)
+    OVER(PARTITION BY county_name ORDER BY date ROWS BETWEEN 6 
+    PRECEDING AND CURRENT ROW),2) AS _7DayAvgDailyCases,
+  dailyDeaths,
+  ROUND(AVG(dailyDeaths)
+    OVER(PARTITION BY county_name ORDER BY date ROWS BETWEEN 6 
+    PRECEDING AND CURRENT ROW),2) AS _7DayAvgDailyDeaths
+FROM
+  `symmetric-aura-337805.MYDB.dm_covid19_co` 
+WHERE
+  county_name = 'Boulder County '
+ORDER BY
+  county_name,
+  date
