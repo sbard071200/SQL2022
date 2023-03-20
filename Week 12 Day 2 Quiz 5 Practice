@@ -1,0 +1,67 @@
+--Week 12 Day 2 DDL Quiz Practice
+
+--Q1. Complete the SQL code that will create the VENDORS table in your mydb dataset. If you do not have a mydb dataset on BigQuery yet, create it before proceeding.
+/*
+Refer to the data types below:
+
+vend_id  STRING
+vend_name  STRING
+vend_address  STRING
+vend_city  STRING
+vend_state STRING
+vend_country STRING
+Make sure to create this table in your mydb dataset on BigQuery
+*/
+
+CREATE TABLE
+  `MYDB.vendors`
+(vend_id STRING,
+vend_name STRING,
+vend_address STRING,
+vend_city STRING,
+vend_state STRING,
+vend_country STRING)
+;
+----------------------------------------------------------------Q2. Show the code that will insert all the records from the stysslq vendors table into the VENDORS table in your mydb dataset. 
+INSERT INTO
+  `MYDB.VENDORS`
+  (vend_id,
+  vend_name,
+  vend_address,
+  vend_city,
+  vend_state,
+  vend_country
+  )     
+SELECT 
+  vend_id,
+  vend_name,
+  vend_address,
+  vend_city,
+  vend_state,
+  vend_country
+FROM
+  `symmetric-aura-337805.styssql.vendors` 
+;
+
+----------------------------------------------------Q3. Complete the SQL code below that will modify the VENDORS table in your mydb dataset to include a new column, vend_web, that will store the vendors website as a STRING.
+
+ALTER TABLE
+  `MYDB.VENDORS`
+ADD COLUMN
+  vend_web STRING
+;
+
+-----------------------------------------------------------------Q4. Fill in the blanks to complete the code that will insert a website for the vendor with id of 'BRS01'.
+/*
+The websites for each vendor should be the vendors name plus '@bigquery.com'
+Remove spaces in the vendor name when you concatenate the strings
+Hint: recall how to use the CONCAT() function and you may need to look up how to use the REPLACE() function
+*/
+
+UPDATE
+  `MYDB.VENDORS`
+SET
+  vend_web = CONCAT(REPLACE(vend_name,' ',''),'@bigquery.com')
+WHERE
+  vend_id = 'BRS01'
+;
