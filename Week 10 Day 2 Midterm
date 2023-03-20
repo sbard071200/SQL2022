@@ -1,0 +1,231 @@
+-- who were the employees and assignment charges assign_charge for employees that weere onvolved with project 15 and 18 construct co
+--between years = inclusive
+--Midterm
+--Q1.
+/*
+SELECT
+  mas.mascot_common_name,
+  count(mas.mascot_common_name) as cnc
+FROM
+  `bigquery-public-data.ncaa_basketball.mascots` as mas
+GROUP BY
+  mas.mascot_common_name 
+ORDER BY
+  cnc DESC
+*/
+--Q2.
+/*
+SELECT
+  ndat.name,
+  sum(ndat.number) as noccur
+FROM
+  `bigquery-public-data.usa_names.usa_1910_2013` as ndat
+WHERE
+  ndat.gender = 'M'
+  AND
+  ndat.year IN (1995, 1996,1997,1998)
+GROUP BY
+  ndat.name
+ORDER BY
+  noccur DESC
+*/
+
+--Q3.
+/*
+SELECT
+  emp.EMP_LNAME,
+  count(emp.EMP_LNAME ) as last,
+  sum(emp.EMP_YEARS ) AS sumyrs,
+  (SELECT
+    round(avg(emp.EMP_YEARS ),2)
+   FROM
+    `symmetric-aura-337805.ConstrucCo.employee`  AS emp
+   WHERE
+    emp.EMP_LNAME LIKE 'Smith%'
+   
+   ) AS avg_years_of_emp,
+  
+  (SELECT
+    sum(emp.EMP_YEARS )
+   FROM
+    `symmetric-aura-337805.ConstrucCo.employee`  AS emp
+   WHERE
+    emp.EMP_LNAME LIKE 'Smith%'
+   
+   ) as total_years_of_emp
+
+FROM
+  `symmetric-aura-337805.ConstrucCo.employee`  AS emp
+WHERE
+  emp.EMP_LNAME LIKE 'Smith%'
+GROUP BY
+  emp.EMP_LNAME 
+*/
+
+--Q4.
+
+SELECT
+  weat.month,
+  round(avg(weat.air_temperature),2) as MOavgtemp, 
+  (SELECT
+    round(avg(weat.air_temperature),2)
+   FROM
+    `bigquery-public-data.noaa_icoads.icoads_core_2013` as weat
+  ) as OVavgtemp,
+    
+
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2013` as weat
+GROUP BY
+  weat.month
+HAVING
+  MOavgtemp > OVavgtemp
+ORDER BY
+  MOavgtemp DESC
+
+
+--Q5. 
+/*
+SELECT
+  vend.V_NAME,
+  vend.V_CONTACT,
+  prod.P_CODE,
+  prod.P_DESCRIPT,
+  prod.P_QOH,
+  (SELECT
+    sum(prod.P_QOH)
+   FROM
+    `symmetric-aura-337805.SaleCoDB.vendor` as vend
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.product` as prod
+    ON
+      vend.V_CODE = prod.V_CODE 
+   WHERE
+    vend.V_ORDER  = false
+   ) totprod
+FROM
+  `symmetric-aura-337805.SaleCoDB.vendor` as vend
+ INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.product` as prod
+ ON
+  vend.V_CODE = prod.V_CODE 
+WHERE
+  vend.V_ORDER = false
+ORDER BY
+  prod.P_QOH DESC
+*/
+
+--Q6.
+/*
+SELECT
+  emp.EMP_NUM,
+  emp.EMP_LNAME,
+  assign.PROJ_NUM,
+  assign.ASSIGN_CHARGE,
+  
+  (SELECT
+   round(sum(assign.ASSIGN_CHARGE ),2)
+  FROM
+  `symmetric-aura-337805.ConstrucCo.employee`  AS emp
+  INNER JOIN
+  `symmetric-aura-337805.ConstrucCo.assignment`  AS assign
+  ON
+  emp.EMP_NUM = assign.EMP_NUM 
+  WHERE
+  assign.PROJ_NUM = 15
+  ) AS proj15Total,
+  
+  (SELECT
+   round(sum(assign.ASSIGN_CHARGE ),2)
+  FROM
+  `symmetric-aura-337805.ConstrucCo.employee`  AS emp
+  INNER JOIN
+  `symmetric-aura-337805.ConstrucCo.assignment`  AS assign
+  ON
+  emp.EMP_NUM = assign.EMP_NUM 
+  WHERE
+  assign.PROJ_NUM = 22
+  ) AS proj22Total,
+FROM
+  `symmetric-aura-337805.SaleCoDB.employee`  AS emp
+  INNER JOIN
+    `symmetric-aura-337805.ConstrucCo.assignment`  AS assign
+  ON
+  emp.EMP_NUM = assign.EMP_NUM 
+WHERE
+  assign.PROJ_NUM = 15 
+  OR
+  assign.PROJ_NUM = 22
+ORDER BY
+  emp.EMP_NUM ASC
+*/
+
+/*
+SELECT
+   emp.EMP_NUM,
+   emp.EMP_LNAME,
+   proj15charge,
+   proj22charge,
+ 
+   (SELECT
+      ROUND(SUM(assign.ASSIGN_CHARGE),2)
+    FROM
+      `symmetric-aura-337805.ConstrucCo.assignment` as assign
+    WHERE
+      assign.PROJ_NUM = 15
+    ) as proj22total,
+ 
+    (SELECT
+      ROUND(SUM(assign.ASSIGN_CHARGE),2)
+     FROM
+      `symmetric-aura-337805.ConstrucCo.assignment` as assign
+     WHERE
+      assign.PROJ_NUM = 22
+     ) as proj25total
+
+FROM
+  `symmetric-aura-337805.ConstrucCo.employee` as emp
+  
+  INNER JOIN
+  
+  (SELECT
+    assign.EMP_NUM,
+    ROUND(SUM(assign.ASSIGN_CHARGE),2) as proj15charge
+   FROM
+     `symmetric-aura-337805.ConstrucCo.assignment`  as assign
+    INNER JOIN
+      `symmetric-aura-337805.ConstrucCo.project` as pro
+    ON
+      assign.PROJ_NUM = pro.PROJ_NUM
+    WHERE
+     pro.PROJ_NUM = 15
+    GROUP BY
+     assign.EMP_NUM
+    ) as proj15
+   
+   ON
+   emp.EMP_NUM = proj15.EMP_NUM
+ 
+   INNER JOIN
+   
+   (SELECT
+      assign.EMP_NUM,
+      ROUND(SUM(assign.ASSIGN_CHARGE),2) as proj22charge
+    FROM
+      `symmetric-aura-337805.ConstrucCo.assignment`  as assign
+    INNER JOIN
+      `symmetric-aura-337805.ConstrucCo.project` as pro
+    ON
+      assign.PROJ_NUM = pro.PROJ_NUM
+    WHERE
+      pro.PROJ_NUM = 22
+    GROUP BY
+      assign.EMP_NUM
+    ) as proj22
+   
+   ON
+   proj15.EMP_NUM = proj22.EMP_NUM
+ 
+ORDER BY
+   emp.EMP_NUM
+*/
