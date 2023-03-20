@@ -1,0 +1,354 @@
+--Final Review
+--Q1. What is the total order quantity for all orders compared to the overall company total quantity and overall company average quantity? 
+#List the order number, order total quantity, company total quantity, and average company quantity
+#Round all results to 2 decimal places.
+SELECT
+  ordI.order_num, 
+  sum(ordI.quantity) as ordTotal,
+
+#subquery one to get total quantity for all orders
+  (SELECT
+    sum(ordI.quantity)
+   FROM
+    `symmetric-aura-337805.styssql.order_items` as ordI
+   ) as totQty,
+
+#subquery two to get average quantity for all orders
+   (SELECT
+      round(avg(ordI.quantity),2)
+    FROM
+      `symmetric-aura-337805.styssql.order_items` as ordI
+    ) as avgQty
+#Sub 1 &2 are used to aggregate across all orders for the entire company
+#Note: there is not a GROUP BY in the subqueries so they aggregate across all rows (i.e. aggregate for the company)
+
+#Now below is part of the outer query code
+
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+GROUP BY
+ordI.order_num
+;
+--Q2. What are all the products with inventory levels below the average inventory levels?
+#Show product code, product name/description, inventory (given by P_QOH),
+#Include vendor code, vendor name, and vendor contact when possible
+#Show the average product inventory for all products
+  #Alias with avgProdInventory
+#Show the product inventory difference from the average inventory
+  #Alias as invAvgDiff
+#Order the results by the products with the largest difference in inventory from the average first
+
+SELECT 
+  prod.p_code, 
+  prod.p_descript,
+  vend.v_code, 
+  vend.v_name, 
+  vend.v_contact,
+  prod.p_qoh,
+  #subquery for average prod inv
+  (SELECT round(avg(prod.p_qoh),2) from `symmetric-aura-337805.SaleCoDB.product` as prod) as avgProdInventory,
+  #subquery for inv avg diff
+  ROUND(prod.p_qoh - (SELECT AVG(p_qoh) from `symmetric-aura-337805.SaleCoDB.product` as prod),2) as invAvgDiff
+
+FROM `symmetric-aura-337805.SaleCoDB.product` as prod
+LEFT JOIN
+`symmetric-aura-337805.SaleCoDB.vendor` as vend
+ON
+prod.v_code = vend.v_code
+
+GROUP BY
+  prod.p_code, 
+  prod.p_descript,
+  prod.p_qoh,
+  vend.v_code,
+  vend.v_name, 
+  vend.v_contact
+
+HAVING
+  invAvgDiff < 0
+
+ORDER BY
+  invAvgDiff
+;
+  -------------------------------------------------------------------------END OF PART 1------------------------------------------------------------------
+  --------------------------------------------------------------Big Query Challenge Questions-----------------------------------------------------------
+  
+--Q1. What is the total number of trees in New York City?
+#Include subtotals for each Borough
+#Include their average diameter and the percent of them are dead (formatted like: 30%)
+#Label the Overall total for New York City as 'Grand Total'
+#Round average diameter to 2 decimal places
+#Sort results by totCount descending
+SELECT
+  COALESCE(boroname,'GRAND TOTAL') AS Borough,
+  COUNT(tree_id) AS totCount,
+  ROUND(AVG(tree_dbh),2) AS avgDiameter,
+
+  #EITHER WAY
+  CONCAT(ROUND(SUM(dead_flag)/COUNT(tree_id)*100,2),'%') AS percent_dead,
+  CONCAT(ROUND(AVG(dead_flag)*100,2),'%') AS perc_dead
+FROM
+  #IN-LINE VIEW FOR DEAD TREE COUNT
+  (SELECT
+    tree_id,
+    boroname,
+    tree_dbh,
+    CASE
+      WHEN status = 'Dead' THEN 1
+      ELSE 0
+    END AS dead_flag
+  FROM
+    `bigquery-public-data.new_york_trees.tree_census_2015` 
+  )
+GROUP BY
+  ROLLUP(
+        boroname
+        ) 
+ORDER BY
+  totCount DESC
+;
+--Q2.How many subscriber routes were there between males and females?
+#Make sure to label the grand total as "GRAND TOTAL" and include the subtotals for every route (formatted like: West Thames St --> Vesey Pl & River Terrace)
+#Include the average age of the rider and the average trip duration in minutes 
+#https://cloud.google.com/bigquery/docs/reference/standard-sql/time_functions (Links to an external site.)
+#Filter out any routes where the starting station is the same as the end station
+#Only include riders that are male or female and are at most 40 years old
+#Sort results by total trips from most to least
+
+#Creating a slice of the actual database
+CREATE OR REPLACE TABLE 
+  `MYDB.nyc_citibike_trips`
+  AS
+SELECT 
+  start_station_name,
+  end_station_name,
+  gender,
+  birth_year,
+  tripduration
+FROM 
+  `bigquery-public-data.new_york.citibike_trips`
+;  
+SELECT
+  COALESCE(trips.route, 'Grand Total') AS route_name,
+  COUNT(trips.tripduration) AS totTrips,
+  ROUND(AVG(age),2) AS avgAge,
+  ROUND(AVG(trips.duration_minutes), 2) AS avgTripDurationMinutes
+FROM
+
+  #IN-LINE VIEW FOR ROUTE_NAME
+  (SELECT
+    start_station_name,
+    end_station_name,
+    gender,
+    EXTRACT(YEAR FROM CURRENT_DATE()) - birth_year AS Age,
+    tripduration,
+    CONCAT(start_station_name, ' ', '-->', ' ', end_station_name) AS route,
+    ROUND(tripduration/60,2) AS duration_minutes
+  FROM
+    `symmetric-aura-337805.MYDB.nyc_citibike_trips`
+  ) AS trips
+WHERE
+  trips.age <= 40
+  AND
+  trips.gender IN ('male', 'female')
+  AND
+  #NEEDED TO FILTER OUT ANY ROUTES WHERE STARTING LOCATION = ENDING LOCATION
+  trips.start_station_name != trips.end_station_name
+GROUP BY
+  ROLLUP
+  (
+  trips.route
+  )
+ORDER BY
+  totTrips DESC
+;
+
+--Q3. You've been asked to collect data on Earthquakes across the Globe. They want you to create a view with the following information:
+#Name the view "eqChallenge" in the "mydb" dataset 
+#Year & country
+#The following continents:
+#South America: Argentina, Bolivia, Brazil, Chile, Colombia, Ecuador, Guyana, Paraguay, Peru, Suriname, Uruguay, Venezuela
+#North America: Canada, USA, Mexico, Nicaragua, Honduras, Cuba, Guatemala, Panama, Costa Rica, Dominican Republic, Haiti, Belize
+#Europe: Russia, Turkey, Germany, France, United Kingdom, Italy, Spain, Ukraine, Poland, Romania, Kazakhstan, Netherlands
+#Number of earthquakes, tsunamis, deaths (use total_deaths), and injuries (use total_injuries)
+#Number of high death and injury instances (when the total is larger then the overall average)
+#Make sure to include the subtotals for continents and countries
+CREATE OR REPLACE VIEW
+  `MYDB.eqChallenge`
+AS
+SELECT
+  year,
+  country,
+  COUNT(id) as EQs,
+  total_deaths,
+  total_injuries,
+  CASE
+    WHEN flag_tsunami IS NOT NULL THEN 1
+    ELSE NULL
+  END AS Tsunami_flag,
+  CASE
+    WHEN country IN ('Argentina', 'Bolivia', 'Brazil', 'Chile', 'Colombia', 'Ecuador', 'Guyana', 'Paraguay', 'Peru', 'Suriname', 'Uruguay', 'Venezuela') 
+    THEN 'South America'
+    WHEN country IN ('Canada', 'USA', 'Mexico', 'Nicaragua', 'Honduras', 'Cuba', 'Guatemala', 'Panama', 'Costa Rica', 'Dominican Republic', 'Haiti', 'Belize')       THEN 'North America'
+    WHEN country IN ('Russia', 'Turkey', 'Germany', 'France', 'United Kingdom', 'Italy', 'Spain', 'Ukraine', 'Poland', 'Romania', 'Kazakhstan', 'Netherlands')       THEN 'Europe'
+    ELSE 'Other'
+  END AS continent,
+  CASE 
+    WHEN total_deaths IS NULL THEN NULL
+    WHEN SUM(total_deaths) > (SELECT ROUND(AVG(total_deaths),2) FROM `bigquery-public-data.noaa_significant_earthquakes.earthquakes`) THEN 1
+    ELSE 0
+  END AS High_death_flag,
+  CASE 
+    WHEN total_injuries IS NULL THEN NULL 
+    WHEN SUM(total_injuries) > (SELECT ROUND(AVG(total_injuries),2) FROM `bigquery-public-data.noaa_significant_earthquakes.earthquakes`) THEN 1
+    ELSE 0
+  END AS High_injuries_flag
+FROM 
+  `bigquery-public-data.noaa_significant_earthquakes.earthquakes`
+GROUP BY
+  year, 
+  country,
+  state,
+  flag_tsunami,
+  total_deaths,
+  total_injuries
+;
+--Q4. How many total earthquakes where have there been in our "eqChallenge" view?
+#Include subtotals for each continent and countries
+#Include total tsunamis triggered, total high death instances, total deaths, average deaths, total high injury instances, total injuries, average injuries 
+#Only include earthquakes from the year 1800 to present
+#Sort by total earthquakes in descending order than by continents in ascending order
+SELECT
+  COALESCE(continent,'GRAND TOTAL') AS continents,
+  COALESCE(country,'CONTINENT TOTAL') AS countries, 
+  SUM(EQs) AS totalEQs,
+  SUM(Tsunami_flag) AS totTsunami,
+  SUM(High_death_flag) AS totHighDeath,
+  SUM(total_deaths) AS totDeath,
+  ROUND(AVG(total_deaths),2) AS avgDeaths,
+  SUM(High_injuries_flag) AS totHighInjuries,
+  SUM(total_injuries) AS totInjuries,
+  ROUND(AVG(total_deaths),2) AS avgInjuries
+FROM
+  `symmetric-aura-337805.MYDB.eqChallenge`
+WHERE
+  year >= 1800
+GROUP BY 
+  ROLLUP(continent,country)
+ORDER BY
+  totalEQs DESC,
+  continent
+;
+------------------------------------------------------Video CodeLSF----------------------------------------------------------------------------------
+--1.
+SELECT
+  COALESCE(cust.CUS_LNAME, "GrandTot") as NAME,
+  inv.INV_NUMBER,
+  line.LINE_NUMBER,
+  round(sum(line.LINE_UNITS * line.LINE_PRICE),2) as Revenue
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    ON
+    line.INV_NUMBER = inv.INV_NUMBER
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.customer` as cust
+      ON
+      cust.CUS_CODE = inv.CUS_CODE
+GROUP BY
+  ROLLUP(
+  cust.CUS_LNAME,
+  inv.INV_NUMBER,
+  line.LINE_NUMBER
+  )
+ORDER BY
+  cust.CUS_LNAME,
+  inv.INV_NUMBER,
+  Revenue DESC
+;
+
+--Q2.
+SELECT
+  prod.V_CODE,
+  ROUND(AVG(prod.P_DISCOUNT),2) as Avg_Discount
+FROM
+  `symmetric-aura-337805.SaleCoDB.product` as prod
+GROUP BY
+  prod.V_CODE
+;
+
+--Q3.
+SELECT
+  ROUND(AVG(prod.P_QOH),1) as avgQuantity
+FROM
+  `symmetric-aura-337805.SaleCoDB.product` as prod
+WHERE
+  prod.V_CODE IS NULL
+;
+
+--Q4.
+SELECT
+  inv.CUS_CODE,
+  prod.V_CODE
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.product` as prod
+      ON
+      line.P_CODE = prod.P_CODE
+WHERE
+  prod.V_CODE IN (21344, 21225)
+GROUP BY
+  inv.CUS_CODE,
+  prod.V_CODE
+;
+
+--Q?.
+SELECT
+  crime.district,
+  COUNT(crime.unique_key) as numDistThefts,
+  (SELECT
+    COUNT(crime.unique_key)
+   FROM
+    `bigquery-public-data.chicago_crime.crime` as crime
+   WHERE
+    crime.primary_type = "MOTOR VEHICLE THEFT"
+    AND
+    crime.date < "2020-01-01"
+   ) AS totThefts
+FROM
+  `bigquery-public-data.chicago_crime.crime` as crime
+WHERE
+  crime.primary_type = "MOTOR VEHICLE THEFT"
+  AND
+  crime.date < "2020-01-01"
+GROUP BY
+  crime.district
+ORDER BY
+  numDistThefts DESC
+;
+
+--Q?.
+SELECT
+  COALESCE(games.venueName, "GrandTotal") AS Venue,
+  CASE
+    WHEN games.venueName IN ('Rogers Centre','Coors Field','Fenway Park','Great American Ball Park','Angel Stadium of Anaheim') THEN 'Top5HitPark'
+    ELSE "OTHER"
+    END AS parkType,
+  SUM(games.homeFinalRuns + games.awayFinalRuns) as runs,
+  SUM(games.homeFinalHits + games.awayFinalHits) as hits,
+  ROUND((SUM(games.homeFinalRuns + games.awayFinalRuns))/SUM(games.homeFinalHits + games.awayFinalHits),2) AS ratio
+FROM
+  `bigquery-public-data.baseball.games_wide` as games
+GROUP BY
+  ROLLUP(
+  parkType,
+  games.venueName
+  )
+ORDER BY
+  hits DESC
