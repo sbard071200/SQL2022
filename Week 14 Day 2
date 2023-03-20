@@ -1,0 +1,111 @@
+--Quiz 6 Practice
+/*
+ALTER TABLE
+  MYDB.dw_covid19
+ADD OR UPDATE COLUMN
+  timeZone String
+*/
+/*
+UPDATE
+  MYDB.dw_covid19
+SET
+  timeZone =
+  CASE
+    WHEN state in ('AZ','CO','MT','NM','UT','WY') THEN 'Mountain'
+    WHEN state in ('CA','NV','OR','WA') THEN 'Pacific'
+    ELSE 'Other'
+    END
+      WHERE timeZone IS NULL
+*/
+SELECT
+  SUM(c19.population) as totalPop,
+  SUM(c19.confirmed_cases) as totalCases,
+  SUM(c19.deaths) as totalDeaths,
+  ROUND((SELECT
+    SUM(confirmed_cases) / SUM(population) * 100000
+   FROM
+    `symmetric-aura-337805.MYDB.dw_covid19`
+   WHERE
+    date = '2021-04-01'
+    ),2) as casesPer,
+  ROUND((SELECT
+    SUM(deaths) / SUM(population) * 100000
+   FROM
+    `symmetric-aura-337805.MYDB.dw_covid19`
+   WHERE
+    date = '2021-04-01'
+    ),2) as deathsPer
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19` as c19
+WHERE
+  date = '2021-04-01'
+;
+
+SELECT
+  COALESCE(c19.state, 'Grand Total') as State,
+  COALESCE(c19.county_name, 'State Total') as County,
+  SUM(c19.population) as totPop,
+  ROUND(AVG(c19.population),2) as avgPop,
+  SUM(c19.confirmed_cases) as totCases,
+  ROUND(AVG(c19.confirmed_cases),2) as avgCases,
+  SUM(c19.deaths) as totDeaths,
+  ROUND(AVG(c19.deaths),2) as avgDeaths
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19` as c19
+WHERE
+  c19.state IN ('CO','CA')
+  and 
+  c19.date = '2022-02-01'
+GROUP BY
+  ROLLUP(
+  c19.state,
+  c19.county_name)
+ORDER BY
+  totCases  DESC
+;
+/*
+SELECT
+  c19.timeZone,
+  SUM(c19.population) as totPop,
+  SUM(c19.confirmed_cases) as totCases,
+  SUM(c19.deaths) as totDeaths,
+  (SELECT
+    ROUND(SUM(confirmed_cases) / SUM(population) * 100000,2)
+   FROM
+    `symmetric-aura-337805.MYDB.dw_covid19` 
+   WHERE
+    timeZone = 'n/a'
+   ) as casesPer,
+   (SELECT
+    ROUND(SUM(deaths) / SUM(population) * 100000,2)
+   FROM
+    `symmetric-aura-337805.MYDB.dw_covid19` 
+   WHERE
+    timeZone = 'n/a'
+   ) as deathsPer
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19` as c19
+WHERE
+  c19.date = '2022-02-01'
+GROUP BY
+  c19.timeZone
+ORDER BY
+  casesPer DESC
+*/
+;
+SELECT
+  timeZone,
+  SUM(confirmed_cases) as totCases,
+  SUM(deaths) as totDeaths,
+  SUM(population) as totPop,
+  ROUND((SUM(confirmed_cases)/SUM(population))*100000,2) as casesPer100,
+  ROUND((SUM(deaths)/SUM(population))*100000,2) as deathsPer100
+FROM
+  `symmetric-aura-337805.MYDB.dw_covid19`  
+WHERE
+  date = '2022-02-01'
+GROUP BY
+  timeZone
+ORDER BY
+  casesPer100 DESC
+
