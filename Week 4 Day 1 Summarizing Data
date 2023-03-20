@@ -1,0 +1,84 @@
+-- Week 4 Day 2 Typealong
+
+--Q1. What is the average price of our products? Alias as prod, Alias avg price as avgPrice
+
+/*
+SELECT
+ concat('$',cast(ROUND(avg(prod.prod_price),2) as STRING)) as avgPrice
+FROM
+ `symmetric-aura-337805.styssql.products` as prod
+ --concat puts the dollar sign infront
+*/
+
+ --Follow up, clean up output with different functions, yes use round
+ --Follow up again? can we add a $ sign? yes with concat(), cast(), and round()
+ 
+--Q2. What is our min, avg, and max prices for all product? use aliases and round all to 2 decimals and list on sep lines
+
+/*
+SELECT
+ count(*) as totRows,
+  --this counts all rows including null values
+  count(prod.prod_id) as totProds,
+  --this only counts nonnull values in this column
+  round(min(prod.prod_price),2) as minPrice,
+  round(avg(prod.prod_price),2) as avgPrice,
+  round(max(prod.prod_price),2) as maxPrice
+FROM
+ `symmetric-aura-337805.styssql.products` as prod
+ */
+ 
+--Q3. What is the overall average price and the average price excluding duplicate prices of products from the vendor with id of DLL01?
+
+/*
+SELECT
+  round(avg(prod.prod_price),2) as oAvgPrice,
+  round(avg(DISTINCT prod.prod_price),2) as uAvgPrice 
+ --DISTINCT eliminates duplicates
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.vend_id = 'DLL01'
+*/
+
+--Q4. What is the total order count, total quantity, total price, and average price for each order number?
+--New GROUPBY statement
+/*
+SELECT
+ ordI.order_num,
+ count(ordI.order_num) as totProducts,
+ sum(ordI.quantity) as totQty,
+ sum(ordI.quantity * ordI.item_price) as totPrice,
+ avg(ordI.item_price) as avgPrice
+ 
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+GROUP BY
+  ordI.order_num
+HAVING
+  totProducts >=5
+ORDER BY
+  totQty DESC
+ */
+--Q4a. order by totQty
+--Q4b. firlter so only orders with 5 or more products are listed
+
+--Q5. Repeat query above but only show orders with 2 or more procuts priced above $4
+
+SELECT
+ ordI.order_num,
+ count(ordI.order_num) as totProducts,
+ sum(ordI.quantity) as totQty,
+ sum(ordI.quantity * ordI.item_price) as totPrice,
+ avg(ordI.item_price) as avgPrice
+ 
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+WHERE
+  ordI.item_price > 4
+GROUP BY
+  ordI.order_num
+HAVING
+  totProducts >=2
+ORDER BY
+  totQty DESC
