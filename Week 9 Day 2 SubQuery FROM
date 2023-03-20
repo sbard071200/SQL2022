@@ -1,0 +1,159 @@
+--Week 9 Day 2 Typealong subQuery FROM
+
+--Q1. Who are the customers what have purchased two specific products?
+#Show the customer codes and name for anyone that has puchased product codes of '13-Q2/P2 and 23109-HB'
+#Include cust code, cust firstname, cust lastname
+/*
+SELECT DISTINCT
+  inv.CUS_CODE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+WHERE
+  line.P_CODE = '13-Q2/P2'
+
+;
+
+SELECT DISTINCT
+  inv.CUS_CODE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+WHERE
+  line.P_CODE = '23109-HB'
+*/
+
+
+--Q2. Same
+/*
+SELECT DISTINCT
+ cust.CUS_CODE,
+ cust.CUS_FNAME,
+ cust.CUS_LNAME 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+  
+--The first join is going to link the customer table to the first subquery.. firstProd
+
+  INNER JOIN
+  
+  (SELECT DISTINCT
+    inv.CUS_CODE 
+   FROM
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+    WHERE
+      line.P_CODE = '13-Q2/P2'
+    ) AS firstProd --this is the alias for the subquery which is a virtual table (in-line view)
+   
+   ON
+    cust.CUS_CODE = firstProd.CUS_CODE 
+
+--This is the second join which links the first subQuery, firstProd, to the second subquery, secondProd, on cus_code
+   INNER JOIN
+   
+    (SELECT DISTINCT
+      inv.CUS_CODE 
+     FROM
+      `symmetric-aura-337805.SaleCoDB.invoice` as inv
+      INNER JOIN
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ON
+        inv.INV_NUMBER = line.INV_NUMBER 
+     WHERE
+      line.P_CODE = '23109-HB'
+      ) as secondProd --aliasing the second subquery (in-line view)
+      
+    ON
+      firstProd.CUS_CODE = secondProd.CUS_CODE 
+*/
+
+-----------------------------------------------------------------------Q3. in-Line views
+
+SELECT DISTINCT
+ cust.CUS_CODE,
+ cust.CUS_FNAME,
+ cust.CUS_LNAME,
+ prod1Qty,
+ prod2Qty 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+
+  INNER JOIN
+  
+  (SELECT DISTINCT
+    inv.CUS_CODE,
+    sum(line.LINE_UNITS) as prod1Qty
+   FROM
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+    WHERE
+      line.P_CODE = '13-Q2/P2'
+    GROUP BY
+      inv.CUS_CODE 
+    ) AS firstProd --this is the alias for the subquery which is a virtual table (in-line view)
+   
+   ON
+    cust.CUS_CODE = firstProd.CUS_CODE 
+
+   INNER JOIN
+   
+    (SELECT DISTINCT
+      inv.CUS_CODE,
+      sum(line.LINE_UNITS) as prod2Qty
+     FROM
+      `symmetric-aura-337805.SaleCoDB.invoice` as inv
+      INNER JOIN
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ON
+        inv.INV_NUMBER = line.INV_NUMBER 
+     WHERE
+      line.P_CODE = '23109-HB'
+     GROUP BY
+      inv.CUS_CODE 
+      ) as secondProd --aliasing the second subquery (in-line view)
+      
+    ON
+      firstProd.CUS_CODE = secondProd.CUS_CODE 
+;
+
+---------------------------------------------------------------Q4. we can do a diff way too
+
+SELECT DISTINCT
+  inv.CUS_CODE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+WHERE
+  line.P_CODE = '13-Q2/P2'
+
+--INTERSECT will only return the cus_codes in these two queries that are found from both queries
+
+INTERSECT DISTINCT
+
+SELECT DISTINCT
+  inv.CUS_CODE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+WHERE
+  line.P_CODE = '23109-HB'
+    
