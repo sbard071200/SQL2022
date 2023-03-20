@@ -1,0 +1,34 @@
+--Week 15 Day 1 Data Visualization
+SELECT
+  inv.INV_DATE as date,
+  prod.P_DESCRIPT,
+  prod.P_PRICE,
+  line.LINE_PRICE,
+  prod.P_QOH,
+  vend.V_CODE,
+  COALESCE(vend.V_NAME,
+    'IN-HOUSE') as vendor,
+  SUM(line.LINE_UNITS) as unitsSold,
+  ROUND(SUM(line.LINE_UNITS * line.LINE_PRICE),2) as revenue
+FROM
+  `symmetric-aura-337805.SaleCoDB.product` as prod
+  LEFT JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    line.P_CODE = prod.P_CODE
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.invoice` as inv
+      ON
+      line.INV_NUMBER = inv.INV_NUMBER
+      LEFT JOIN
+        `symmetric-aura-337805.SaleCoDB.vendor` as vend
+        ON
+        prod.V_CODE = vend.V_CODE 
+GROUP BY
+  date,
+  prod.P_DESCRIPT,
+  prod.P_PRICE,
+  line.LINE_PRICE,
+  prod.P_QOH,
+  vend.V_CODE,
+  vend.V_NAME 
