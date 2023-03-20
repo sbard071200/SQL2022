@@ -1,0 +1,115 @@
+--Week 11 Day 1 Typealong INSERT UPDATE DELETE
+
+-------------------------------------------------Task: Insert a new customer row/record into the styssql custNew table
+/*
+INSERT INTO
+  `styssql.custNew`
+  (cust_id,
+  cust_name,
+  cust_address,
+  cust_city,
+  cust_state,
+  cust_zip,
+  cust_country,
+  cust_contact,
+  cust_email
+  )
+VALUES
+  (1234,
+   'Toy Land',
+   '123 Any Street',
+   'New York',
+   'NY',
+   111111,
+   'USA',
+   NULL,
+   NULL
+  )
+;
+*/
+
+---------------------------------------------------------------------------Inserting Multiple Records
+/*
+INSERT INTO
+  `styssql.custNew`
+  (cust_id, cust_name)
+VALUES
+  (1, 'toy1'),
+  (2, 'toy2'),
+  (3, 'toy3')
+*/
+
+-------------------------------------------------------------------- insert the new customers from custNew into customers table
+/*
+INSERT INTO
+  `styssql.customers`
+  (cust_id,
+  cust_contact,
+  cust_email,
+  cust_name,
+  cust_address,
+  cust_city,
+  cust_state,
+  cust_zip,
+  cust_country
+ )
+SELECT
+  cust_id,
+  cust_contact,
+  cust_email,
+  cust_name,
+  cust_address,
+  cust_city,
+  cust_state,
+  cust_zip,
+  cust_country
+FROM
+  `styssql.custNew` 
+*/
+
+-----------------------------------------------------First update the city and cust_id 1 and 2 to have the city of Denver and state of CO
+/*
+UPDATE
+  `styssql.customers`
+SET
+  cust_city = 'Denver',
+  cust_state = 'CO'
+WHERE
+  cust_id IN (1,2)
+*/
+
+-----------------------------------------------Now lets update cust_id of 3 to have a city of Amarillo and the state of TX
+/*
+UPDATE
+  `styssql.customers`
+SET
+  cust_city = 'Amarillo',
+  cust_state = 'TX'
+WHERE
+  cust_id = 3
+*/
+
+
+---------------------------------------------------------------------------
+#Copying from one table to another
+#INSERT INTO appends data to an existing table
+#But if we want to make a table from an existing table we use, CREATE TABLE
+---------------------------------------------------------------------------
+/*
+CREATE TABLE
+  `styssql.custCopy`
+  AS
+SELECT
+  *
+FROM
+  `styssql.customers`
+*/
+
+--------------------------------------------DELETING DATA FROM TABLES
+/*
+DELETE
+FROM
+  `styssql.customers`
+WHERE
+  cust_id in (1234,1,2,3)
+*/
