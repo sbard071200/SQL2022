@@ -1,0 +1,94 @@
+--Week 6 Day 1 Typealong 2 subQuery HAVING AZURE DATA STUDIO??
+/*
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+ORDER BY
+  line.P_CODE
+*/
+
+--Q What are all the products with a total quantity sold greater than the average quantity sold across all products?
+--Q part 1
+/*
+SELECT
+  line.P_CODE,
+  sum(line.LINE_UNITS) as prodQty,
+  round(sum(line.LINE_UNITS * line.LINE_PRICE),2) as prodRev,
+  
+  --Subquery to get the total units sold across all products
+  (SELECT
+    sum(line.LINE_UNITS)
+   FROM
+    `symmetric-aura-337805.SaleCoDB.line` as line
+   ) as overallQty
+  
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+GROUP BY
+  line.P_CODE 
+ORDER BY
+  prodQty ASC
+*/
+
+--Q2 Now how do we get the average number of units sold for each product?
+--This query gets the average units sold by line number. why?
+/*
+SELECT
+  round(avg(line.LINE_UNITS),2) as lineAvg
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+;
+--This query gets the avg units sold by products
+
+SELECT
+  round(sum(line.LINE_UNITS)/count(DISTINCT line.P_CODE),2) as prodAvg
+FROM 
+  `symmetric-aura-337805.SaleCoDB.line` as line
+ */
+
+--Now lets put it all together
+--We want product id, Total product quantity as prodQty, Overall Quantity as totQty, Average product quantity as avgProdQty
+-- our outer query shows results by pcode
+SELECT
+  line.P_CODE,
+  sum(line.LINE_UNITS) as prodQty,
+  
+  --SubQ 1 to get total units ordered across the company
+  (SELECT
+    sum(line.LINE_UNITS)
+   FROM
+    `symmetric-aura-337805.SaleCoDB.line` as line
+   ) as totQty,
+   
+   --SubQ 2 to get the total number of products that have been sold
+   (SELECT
+      count(DISTINCT line.P_CODE)  
+    FROM
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    ) as prodCount,
+    
+    --SubQ 3 to show total rows in the result set
+    (SELECT
+      count(line.P_CODE)
+     FROM
+      `symmetric-aura-337805.SaleCoDB.line` as line
+     ) as totRows,
+     
+     --SubQ 4 to get the avg prod quantity sold
+     (SELECT
+        round(sum(line.LINE_UNITS)/count(DISTINCT line.P_CODE),2)
+      FROM
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ) as avgProdQty
+
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+GROUP BY
+  line.P_CODE
+--The HAVING clause using subqueries to filter the grouped data based on prodQty vs. avgProdQty
+HAVING
+  prodQty
+  >
+  avgProdQty
+-- You can also paste entire subqueries in your having clause depending on your DBMS
