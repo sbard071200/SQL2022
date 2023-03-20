@@ -1,0 +1,146 @@
+--Week 8 Day 1 In class
+--Warm Up
+--Questions: What was the total order quantity for each vendor?
+--Additionally, show the total number of vendors as, num_vendors, and the average order quantity per vendor in the result set
+--This part of the expansion of Q2 from the in-class exercises on Intro to Joins and is also a review of subqueries
+
+
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  sum(ordI.quantity) as vend_qty,
+
+--Bonus Q1 for tot_qty
+  (SELECT
+    sum(ordI.quantity)
+   FROM
+    `symmetric-aura-337805.styssql.order_items` as ordI
+   ) as tot_qty,
+
+--Bonus Q2 total vendors
+  (SELECT
+    count(vend.vend_name)
+   FROM
+    `symmetric-aura-337805.styssql.vendors` as vend
+   ) as tot_vendors,
+
+--Bonus Q3 avg qty per vendor
+  (SELECT
+    sum(ordI.quantity) FROM  `symmetric-aura-337805.styssql.order_items` as ordI
+    ) 
+   /
+   (SELECT count(vend.vend_name) FROM `symmetric-aura-337805.styssql.vendors` as vend
+   ) 
+   as avg_q_per_vendors,
+
+--Bonus Q4 avg per vendor only with vendors with orders
+
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+  INNER JOIN
+    `symmetric-aura-337805.styssql.products` as prod
+    ON
+    vend.vend_id = prod.vend_id
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+    ON
+    prod.prod_id = ordI.prod_id 
+GROUP BY
+  vend.vend_id,
+  vend.vend_name 
+ORDER BY
+  vend_qty DESC
+
+
+
+--In Class Exercises
+--Q1. What are all the vendors with or without an order associated with their products?
+--Return vendor id and vendor name,  product id and product name, and total order quantity, Return all vend
+/*
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name,
+  sum(ordI.quantity) as totQty
+
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+  LEFT JOIN
+   `symmetric-aura-337805.styssql.products` as prod
+  ON
+  vend.vend_id = prod.vend_id
+  LEFT JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+  ON
+  prod.prod_id = ordI.prod_id 
+GROUP BY
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name 
+ORDER BY
+  vend.vend_name,
+  totQty DESC
+*/
+--Q2. Question: What vendors are missing product information? 
+#Return vendor id and vendor name,  product id and product name, Only show the vendors without product information
+#Do not use more tables than you have to to answer this question
+#Order the results by vendor name in ABC order
+/*
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name,
+
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+  LEFT JOIN
+   `symmetric-aura-337805.styssql.products` as prod
+  ON
+  vend.vend_id = prod.vend_id
+WHERE
+  prod.prod_id IS NULL
+  OR
+  prod.prod_name IS NULL
+
+
+
+ORDER BY
+  vend.vend_name 
+*/
+--Q3. Who are all our vendors that have product information but don’t have an order for certain products yet?  
+#Sort the result set by vendor name and then product name in ABC order
+#Use the minimum number of tables necessary to answer the question
+/*
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name,
+
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+  INNER JOIN
+   `symmetric-aura-337805.styssql.products` as prod
+  ON
+  vend.vend_id = prod.vend_id
+  LEFT JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+  ON
+  prod.prod_id = ordI.prod_id 
+  
+WHERE
+  ordI.order_num IS NULL
+
+GROUP BY
+  vend.vend_id,
+  vend.vend_name,
+  prod.prod_id,
+  prod.prod_name 
+
+ORDER BY
+  vend.vend_name,
+  prod.prod_name 
+*/
