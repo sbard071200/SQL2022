@@ -1,0 +1,124 @@
+-- Week 6 Quiz 3 ETC Code
+--Q1. Which customer(s) (using cust_id) have purchased an item priced greater than $11?
+/*
+SELECT
+  ord.cust_id
+FROM
+ `symmetric-aura-337805.styssql.orders` as ord
+WHERE
+  ord.order_num IN
+  (SELECT
+     ordi.order_num
+   FROM
+     `symmetric-aura-337805.styssql.order_items`  as ordi
+   WHERE
+    ordi.item_price > 11
+   )
+*/
+
+--Q2. In 2020, what was the average tip amount for payment types ‘Credit Card’, ‘Cash’, and ‘Mobile’? Also find the overall avg for tips across all taxi rides
+/*
+SELECT  
+  taxi.payment_type,
+  ROUND(AVG(taxi.tips),2) avgtip,
+  
+  (SELECT
+     ROUND(AVG(taxi.tips),2)
+   FROM
+     bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+   WHERE
+     EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2020
+   ) as overallavgtip
+
+FROM
+  bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+WHERE
+  EXTRACT (YEAR FROM taxi.trip_end_timestamp) = 2020
+AND
+  taxi.payment_type IN ("Credit Card","Cash","Mobile")
+GROUP BY
+  taxi.payment_type
+*/
+
+--Q3. What is the overall average ship speed and the average ship speed for ship courses 3 and 5? (rounded to two decimal places) 
+/*
+SELECT
+  storm.ship_course,
+  ROUND(AVG(storm.ship_speed),2) AS avgspeed,
+
+  (SELECT
+    ROUND(AVG(storm.ship_speed),2)
+   FROM
+    bigquery-public-data.noaa_icoads.icoads_core_2017 as storm
+   ) as overallavgspeed
+
+FROM
+  bigquery-public-data.noaa_icoads.icoads_core_2017 as storm
+WHERE
+  storm.ship_course IN (3,5)
+GROUP BY
+  storm.ship_course
+*/
+--Q4.What was the difference in the 2021 average fare amount and the 2020 average fare amount? (2021 minus 2020)
+/*
+SELECT
+  ROUND(AVG(taxi.fare),2) as avgfare2020,
+  
+  (SELECT
+    ROUND(AVG(taxi.fare),2)
+   FROM
+    bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+   WHERE
+    EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2021
+   ) as avgfare2021,
+
+  ROUND(
+  (SELECT
+    AVG(taxi.fare)
+   FROM
+    bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+   WHERE
+    EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2021
+   ) - AVG(taxi.fare),2) as difference
+
+FROM
+bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+WHERE
+EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2020
+*/
+--Q5. In 2021, which payment types met both of the following criteria?
+--An average trip (in miles) that is longer than the 2021 overall average trip (in miles)?
+--An average tip larger than the 2021 overall average tip? Sort by payment type ascending
+SELECT
+  taxi.payment_type,
+  ROUND(AVG(taxi.trip_miles),2) as avgtripmiles,
+  
+  (SELECT
+    ROUND(AVG(taxi.trip_miles),2)
+   FROM
+    bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+   WHERE
+    EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2021
+   ) as overallavgtripmiles,
+
+   ROUND(AVG(taxi.tips),2) as avgtip,
+
+   (SELECT
+      ROUND(AVG(taxi.tips),2)
+    FROM
+      bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+    WHERE
+      EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2021
+    ) as overallavgtip
+
+FROM
+  bigquery-public-data.chicago_taxi_trips.taxi_trips as taxi
+WHERE
+  EXTRACT ( YEAR FROM taxi.trip_end_timestamp) = 2021
+GROUP BY
+  taxi.payment_type
+HAVING
+  avgtripmiles > overallavgtripmiles
+  AND avgtip > overallavgtip
+ORDER BY
+  taxi.payment_type
