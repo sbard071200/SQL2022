@@ -1,0 +1,54 @@
+ --SQL CalcFields TypeAlong 1 
+  --Q1. What are the vendor names and countries?
+  --Q2a. Seperate name and country by a space
+  --Q2b. include parenthesis around the country name
+  --Q3. Order the result set by vendor in ABC Order
+  --Q4. Use the table alias when listing any fields
+  --Q5. Alias the concatenated field for vendor and country as 'vendCountry'
+
+SELECT
+  concat(vend.vend_name, ' ', '(',vend.vend_country,')') as vendCountry
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+ORDER BY
+  vend.vend_name 
+;
+
+--Q2: What are the first four letters in each vendors name? (alias the calculated field as vend4 (legacy code)
+/*
+SELECT
+  LEFT(vend.vend_city, 4) as vend4 
+FROM
+ [symmetric-aura-337805:styssql.vendors]  as vend
+ */
+ 
+ --Q3. What is the expanded/total price for all products for our ordered items?
+ --Alias as ordI
+ --return order ids,, product ids, quantity, item prices, and expanded prices
+ --alias field as 'total_price'
+ --seperate lines
+ 
+ SELECT
+  ordI.order_num,
+  ordI.prod_id,
+  ordI.quantity,
+  ordI.item_price,
+  ordI.quantity * ordI.item_price as total_price
+ FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+ ORDER BY
+  total_price DESC
+;
+
+--Q4. What are all the orders that took place in 2012?
+--use extract()
+
+SELECT
+  ord.order_num,
+  ord.order_date,
+  
+FROM
+  `symmetric-aura-337805.styssql.orders` as ord 
+WHERE
+  EXTRACT(year FROM ord.order_date) = 2012
+ 
