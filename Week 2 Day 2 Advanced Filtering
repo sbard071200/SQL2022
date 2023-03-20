@@ -1,0 +1,48 @@
+--W2D2 in  class activity: Advanced Filtering
+#u can changed text or use dropdown to change date
+#u can use ; to seperate querys
+--1. How many total records are returned for visitNumber1 using chrome to access our website?
+/*
+SELECT
+ dat.visitNumber, dat.visitId, dat.device.browser 
+FROM
+  `bigquery-public-data.google_analytics_sample.ga_sessions_20170801` as dat 
+WHERE
+  dat.device.browser = 'Chrome' AND (dat.visitNumber = 1)
+*/
+
+--2. How many unique countries are there that start with 'United'?
+/*
+SELECT DISTINCT
+  dat.geoNetwork.country
+FROM
+ `bigquery-public-data.google_analytics_sample.ga_sessions_20170801` as dat
+WHERE
+  dat.geoNetwork.country LIKE 'United%'
+*/
+
+--3.
+/*
+SELECT DISTINCT
+  dat.geoNetwork.country
+FROM
+ `bigquery-public-data.google_analytics_sample.ga_sessions_20170801` as dat
+WHERE
+  dat.geoNetwork.country LIKE '%Arab%'
+*/
+--4.
+/*
+SELECT
+  dat.geoNetwork.country
+FROM
+ `bigquery-public-data.google_analytics_sample.ga_sessions_20170801` as dat
+WHERE
+  dat.geoNetwork.country LIKE '%Arab%'
+*/
+--5.
+SELECT
+  dat.visitId, dat.geoNetwork.country, dat.device.browser, dat.device.isMobile 
+FROM
+  `bigquery-public-data.google_analytics_sample.ga_sessions_20170801` as dat
+WHERE
+  dat.device.isMobile = true AND (dat.geoNetwork.country LIKE '%Arab%' OR dat.geoNetwork.country LIKE '%United%')
