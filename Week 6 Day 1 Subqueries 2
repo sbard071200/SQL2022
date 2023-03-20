@@ -1,0 +1,101 @@
+--Week 6 Day 1 Typealongs subqueiries
+
+--Q1. What are customers ids that ordered a product id of 'RGAN01'
+/*
+SELECT
+  ordI.order_num 
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+WHERE
+  ordI.prod_id  = 'RGAN01'
+;
+--Q1A. How do we find all the products with an id of 'RGAN01'
+--Q1B. What customers are associated with the orders from the previos query?
+SELECT
+  ord.cust_id 
+FROM
+  `symmetric-aura-337805.styssql.orders` as ord
+WHERE
+  ord.order_num IN (20008, 20007)
+;
+--Q1. Using Subqueries: Who are the customers who ordered a particular item ('RGAN01')
+SELECT
+  ord.cust_id 
+FROM
+  `symmetric-aura-337805.styssql.orders` as ord
+WHERE
+  ord.order_num IN  
+  --SUBQUERY HERE TO FILTER DATA ALL ENCLOSED WITHIN PARENTHESIS
+(SELECT
+  ordI.order_num 
+ FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+ WHERE
+    ordI.prod_id = 'RGAN01'
+)
+*/
+
+-------------------------------------Q2. What are the customer names of those who ordered the product 'RGAN01'
+--1. Customers 2. orders 3. order_items
+/*
+SELECT
+ cust.cust_name as name,
+ cust.cust_id 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_id IN
+    (SELECT
+    ord.cust_id 
+     FROM
+    `symmetric-aura-337805.styssql.orders` as ord
+     WHERE
+    ord.order_num IN
+      (SELECT
+        ordI.order_num 
+       FROM
+        `symmetric-aura-337805.styssql.order_items` as ordI
+       WHERE
+        ordI.prod_id = 'RGAN01'
+       )
+      )
+;
+*/    
+    
+--------------Q3. What was the total order quantity for each order as well as the overall total quantity and average across all orders?
+
+SELECT
+  ordI.order_num,
+  sum(ordI.quantity) as ordTotal,
+  
+  #Subqury 1 to get total quan for all orders
+  (SELECT
+    sum(ordI.quantity)
+   FROM
+    `symmetric-aura-337805.styssql.order_items`  as ordI
+   ) as totQty,
+   
+   #Subquery 2 is going to get the average quantity across all orders
+   (SELECT
+      round(avg(ordI.quantity),2)
+    FROM
+      `symmetric-aura-337805.styssql.order_items` as ordI
+    ) as avgOrditemQty,
+   # Subquery 3 is giving the avg across orders 
+    (SELECT
+      sum(ordI.quantity)/count(DISTINCT ordI.order_num)
+     FROM
+      `symmetric-aura-337805.styssql.order_items` as ordI
+     ) as avgOrdQty
+     
+    
+    
+    # Sub 1 & 2 used to aggregate across all orders its only averge across all orders and items???
+    # There is no GROUP BY in the subqueries so they will aggregate across all rows
+# Now the below code code is part of our outer query
+
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+GROUP BY
+  ordI.order_num
+;
