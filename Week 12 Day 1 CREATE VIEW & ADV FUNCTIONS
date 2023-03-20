@@ -1,0 +1,77 @@
+--Week 12 Day 1 In class CREATE VIEW and ADV Analytics Functions
+--Warm Up View Review
+---------------------------------------------------------------Q1.
+#Complete the SQL code below that will store a view that will serve as the basis of various analytics reports on artists and their tracks. Below are the specifications for the view:
+#Name the view, listens, and store in your mydb dataset
+#Include artist_name, track_name, and genre in the result set
+#For the fill in the blanks list these fields in the order given above
+#Count the number of listens based on grouping by the fields above using the listend_at column. Alias this count 'listens'
+#Count the number of users based on the groupings of the fields above Alias this count 'fans'
+#Calculate the earliest and latest listened_at time stamps, Alias the earliest timestamp as 'earliest', Alias the latest timestamp as 'latest' 
+/*
+CREATE VIEW
+  `MYDB.Vlistens`
+  AS
+  SELECT
+    artist_name,
+    track_name,
+    genre,
+    COUNT(listened_at) as listens,
+    COUNT(DISTINCT(user_name)) as fans,
+    MIN(listened_at) as earliest,
+    MAX(listened_at) as latest
+    FROM
+      `MYDB.classicrock`
+    GROUP BY
+      artist_name,
+      track_name,
+      genre
+*/
+--------------------------------------------------------------------Q2.
+#Now, query the view you created in the first question to show only the top 10 tracks based on listens. This could serve as the the query behind a Top 10 Tracks report. 
+/*
+SELECT
+*
+FROM
+  `MYDB.Vlistens` 
+ORDER BY
+  listens DESC
+LIMIT 10
+*/
+------------------------------------------------------------------------Q3.
+#Create a query that uses your listens view and performs descriptive analytics on the artists. This query could serve as the code that generates an artist popularity report or dashboard.
+--List the results by artist_name
+--Calculate total listens for each artist. Alias this as totListens
+--Calculate the average listens per artist track as avgTrackListens rounded to 2 decimals
+--Calculate the average fans per artist track as avgTrackFans rounded to 2 decimals
+--Limit the results used in the calculations to only the tracks with at least 100 listens
+--Sort the results by avgTrackListens
+/*
+SELECT
+  artist_name,
+  round(sum(listens),2) as totListens,
+  round(avg(listens),2) as avgTrackListens,
+  round(avg(fans),2) as avgTrackFans
+FROM
+  `MYDB.Vlistens`
+WHERE
+  listens >= 100
+GROUP BY
+  artist_name
+ORDER BY
+  avgTrackListens DESC
+*/
+--Q4. What are the total listens per artist, average fans per artist's songs, and the overall total listens and overall average fans per artist's songs?
+
+SELECT
+ COALESCE(artist_name, 'GRAND TOTALS') as artist,
+ SUM(listens) as totListens,
+ ROUND(AVG(fans),2) as avgTrackFans
+FROM
+  `MYDB.Vlistens` 
+WHERE
+  listens >= 100
+GROUP BY
+  ROLLUP(artist_name)
+ORDER BY
+  totListens DESC
