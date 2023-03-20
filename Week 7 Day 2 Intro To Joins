@@ -1,0 +1,93 @@
+--Week 7 Day 2 In-Class Exercises- Intro to Joins
+--Q1. What are all the orders in our database?
+--Include customer name, order number, order item, product id, product name, and vendor name in the result set
+/*
+SELECT
+  cust.cust_name,
+  ord.order_num,
+  ordI.order_item,
+  prod.prod_id,
+  prod.prod_name,
+  vend.vend_name 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  INNER JOIN
+    `symmetric-aura-337805.styssql.orders` as ord
+    ON
+    cust.cust_id = ord.cust_id
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+    ON
+    ord.order_num = ordI.order_num
+  INNER JOIN
+    `symmetric-aura-337805.styssql.products` as prod
+    ON
+    ordI.prod_id = prod.prod_id 
+  INNER JOIN
+    `symmetric-aura-337805.styssql.vendors` as vend
+    ON
+    prod.vend_id = vend.vend_id 
+ 
+ORDER BY
+  cust.cust_name,
+  prod.prod_name 
+*/
+
+--Q2. What was the total order quantity for each vendor? Include vendor id and vendor name in the output
+-- Bonus Q: How many total vendors does styssql have in the database? (Use Subqueries)
+-- Bonus Q2: How many vendors have products with orders placed for them
+SELECT
+  vend.vend_id,
+  vend.vend_name,
+  sum(ordI.quantity) as tot_qty,
+--Bonus Q 
+  (SELECT
+    count(vend.vend_name)
+   FROM
+    `symmetric-aura-337805.styssql.vendors` as vend
+   ) as tot_vendors,
+
+--Bonus Q2
+  (SELECT
+    round(avg(ordI.quantity),2)
+   FROM
+    `symmetric-aura-337805.styssql.order_items` as ordI
+  ) as avg_q_per_vend
+
+FROM
+  `symmetric-aura-337805.styssql.vendors` as vend
+  INNER JOIN
+    `symmetric-aura-337805.styssql.products` as prod
+    ON
+    vend.vend_id = prod.vend_id
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+    ON
+    prod.prod_id = ordI.prod_id 
+GROUP BY
+  vend.vend_id,
+  vend.vend_name 
+ORDER BY
+  tot_qty DESC
+
+
+--Q3. What was the total order quantity for each product? Include product id and product name in your result set 
+--Sort the results by quantity in descending order and then product name in ABC order to break any ties
+-- Follow up 1, How many total products does styssql have in the database?
+/*
+SELECT
+  prod.prod_id,
+  prod.prod_name,
+  sum(ordI.quantity) as tot_qty
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+    ON
+    prod.prod_id = ordI.prod_id
+GROUP BY
+  prod.prod_id,
+  prod.prod_name
+ORDER BY
+  tot_qty DESC, prod.prod_name 
+*/
