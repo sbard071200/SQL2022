@@ -1,0 +1,146 @@
+--Week 12 Day 1 Typealong adv Functions CASE ROLLUP(), COALESCE(), CAST()
+--Advanced data analytics SQL Functions
+--CASE, ROLLUP(), COALESCE(), CAST()
+
+--------------------------------------------------------------------------------------------
+--Using CASE to perform feature engineering
+--CASE allows us to change a value to another value based on one or more conditions
+--CASE works sinilarly to IF-ELIF-ELSE statements
+--The first condition is evaulated first, then the second and so on
+--GENERAL SYNTAX:
+/*
+CASE
+  WHEN [condition] THEN [value]
+  WHEN [condition] THEN [value]
+  .
+  .
+  .
+  ELSE [default value]
+  END AS [alias for the feature/column]
+*/
+
+--------------------------------------------------------------------------------------------
+#Task: Create a feature that will classify order quantities as follows:
+#Any order quantity 100 or above as "High"
+#Any order quantity below 100 as "Low"
+/*
+SELECT
+  ordI.order_num,
+  ordI.order_item,
+  ordI.quantity,
+  -- Add the flsag for "High" or "Low" order quantity
+  CASE
+    WHEN ordI.quantity >=100 THEN 'High'
+    WHEN ordI.quantity <100 THEN 'Low'
+    END AS qtyFlag
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+*/
+
+----------------------------------------------------------------------------------------------------
+# Using CASE to perform conditional calculations on our data
+#Q. How many order items are in the 'High' quantity category? The 'Low' quantity category?
+#Define 'High' and 'Low' based on the prior problem
+#Some people call this the Zero trick where our condition converts values to 1 if the condition is met
+/*
+SELECT
+  SUM(CASE WHEN quantity >=100 THEN 1 ELSE 0 END) as highCount,
+  SUM(CASE WHEN quantity <100 THEN 1 ELSE 0 END) as lowCount
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+*/
+
+-------------------------------------------------------------------------------------------------------------
+#Prior question using COUNT()
+#"NULL" CASE trick
+#Our function will ignore a null
+/*
+SELECT
+  COUNT(CASE WHEN quantity >=100 THEN ordI.order_item ELSE NULL END) as highCount,
+  COUNT(CASE WHEN quantity <100 THEN ordI.order_item ELSE NULL END) as lowCount
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+*/
+
+----------------------------------------ROLLUP()------------------------------------------------------------------------------
+#Using ROLLUP() to show various aggregations in your result set
+#ROLLUP allows us to get subtotal rows (aka super-aggregate rows) and a grand total row
+#A grouping set is just the set of columns you group by
+#ROLLUP will generate sub totals for all combinations of your grouping set
+
+--Q. What are the order quantity totals for company, for order numbers, and for order items?
+--We could use subqueries to get all the different aggregations
+--OR... we can use ROLLUP
+/*
+SELECT
+  order_num,
+  order_item,
+  sum(quantity) as totQty
+FROM
+  `symmetric-aura-337805.styssql.order_items` 
+GROUP BY
+  ROLLUP
+ (
+  order_num,
+  order_item
+ )
+ORDER BY
+  order_num,
+  order_item
+*/
+
+--Using subqueries to answer the prior query
+/*
+SELECT
+  ordI.order_num,
+  ordI.order_item,
+  sum(quantity) as lineQty,
+  ordqty, #this will be pulled from the in-line view
+  --Write a subquery for the overall company total
+  (SELECT sum(quantity)
+  FROM
+    `symmetric-aura-337805.styssql.order_items`) as compTot
+FROM
+  `symmetric-aura-337805.styssql.order_items` as ordI
+  --Write an in-line view to get the order number subtotals
+  INNER JOIN
+  (SELECT
+    ordI.order_num,
+    sum(ordI.quantity) as ordqty
+   FROM
+    `symmetric-aura-337805.styssql.order_items` as ordI
+   GROUP BY
+    order_num
+   ) as ordTot
+   ON
+   ordI.order_num = ordTot.order_num 
+GROUP BY
+  ordI.order_num,
+  ordI.order_item,
+  ordqty
+ORDER BY
+  ordI.order_num 
+*/
+
+---------------------------------------------------------COALESCE()---------CAST()--------------------------------------------------
+#Using COALESCE to substitue in values for NULL values
+#Notice when we used ROLLUP the null values that occured for various subtotals and the grand total
+#We can use COALESCE to insert values for those null values to improve output
+#We also need to use the CAST function to convert order_num and ordeR_item to strings
+#CAST converts columns into the specified data type
+#We need to convert order_items and order_num to strings because COALESCE only works on string values 
+SELECT
+  COALESCE(CAST(order_num AS STRING), 'ovTotal') as ordernum,
+  COALESCE(CAST(order_item AS STRING), 'ordTotal') as orderitem,
+  SUM(quantity) as totQty
+FROM
+  `symmetric-aura-337805.styssql.order_items` 
+GROUP BY
+  ROLLUP
+  (
+  order_num,
+  order_item
+  )
+ORDER BY
+  order_num,
+  order_item
