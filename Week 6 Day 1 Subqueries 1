@@ -1,0 +1,109 @@
+--Week 6 Day 1 inClass
+--Warm Up What are all the customer numbers that ordered the product 'BR01'?
+/*
+SELECT
+  ord.cust_id 
+
+FROM
+  `symmetric-aura-337805.styssql.orders` as ord
+WHERE
+  ord.order_num IN
+  (SELECT
+    ordI.order_num 
+   FROM
+    `symmetric-aura-337805.styssql.order_items` as ordI
+   WHERE
+    ordI.prod_id = 'BR01'
+   )
+*/
+--Week 6 Practice Exercises Subqueries
+--Q1. What is the total population in each of the Boulder zipcodes 80301, 80302, 80303, 80304, and 80310 and the total population for all those zipcodes combined
+
+/*
+SELECT
+  pop.zipcode,
+  pop.population,
+  
+  (SELECT
+    sum(pop.population)
+   FROM
+    `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as pop
+   WHERE
+    pop.gender IS NULL
+   AND
+    pop.zipcode IN ('80301','80302','80303','80304','80310')
+   ) as totPop,
+   
+   --If we wanted pop for whole USA
+   (SELECT
+      SUM(pop.population)
+    FROM
+      `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as pop
+    WHERE
+      pop.gender IS NULL
+    ) as us_pop,
+    
+    --Proportion of population HELP
+    
+FROM
+  `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as pop
+WHERE
+  pop.gender  IS NULL
+  AND
+  pop.zipcode IN ('80301','80302','80303','80304','80310')
+*/
+
+--Q2. Which months had an average monthly air temperature greater than the overall average air temperature?
+/*
+SELECT
+  wea.month,
+  round(avg(wea.air_temperature),2) as avgMonth,
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2017` as wea
+GROUP BY
+  wea.month
+HAVING
+  (SELECT
+    round(avg(wea.air_temperature),2) as avgAirTemp
+   FROM
+    `bigquery-public-data.noaa_icoads.icoads_core_2017` as wea
+   )
+   <
+   avgMonth
+ORDER BY
+  avgMonth DESC
+*/
+--Q3.Go back to Question 1 regarding Boulder zip codes and answer the following question
+--What is each of Boulder's zip codes proportion of the total?
+
+SELECT
+  usa.zipcode,
+  usa.population as zipPop,
+  
+  -- Sub1 to get total population
+  (SELECT sum(usa.population)
+    FROM `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as usa
+    WHERE 
+      usa.gender IS NULL 
+      AND usa.zipcode IN('80301','80302','80303','80304','80310')
+   ) as  totPop,
+  
+  -- Expression with a subquery to get the ratio of population
+  round(
+       usa.population
+        /
+      (SELECT sum(usa.population)
+       FROM `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as usa
+       WHERE 
+        usa.gender IS NULL 
+        AND usa.zipcode IN('80301','80302','80303','80304','80310'))
+        *100,  -- multiply by 100 to get the specified format
+        2  -- round to two decimals
+      ) as ratio 
+FROM 
+  `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as usa
+WHERE
+  usa.zipcode IN('80301','80302','80303','80304','80310')
+  AND 
+  usa.gender IS NULL
+  
