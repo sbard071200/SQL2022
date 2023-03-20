@@ -1,0 +1,85 @@
+------------------------------------------------------------------Q1. Question: What were the average quarterly price indexes (rounded to two decimal places) for 2018? 
+/*
+SELECT
+  EXTRACT(Quarter from bls.date) as quarter,
+  ROUND(avg(bls.value),2) as avgPrice
+FROM
+`bigquery-public-data.bls.employment_hours_earnings` as bls
+WHERE
+bls.year = 2018
+GROUP BY
+quarter
+*/
+
+-------------------------------------------------------------------Q2. What were the lowest price indexes for 1939, 1969, 1999, and 2019?  
+/*
+SELECT
+  bls.year,
+  round(min(bls.value),2) as minIndex
+FROM
+  `bigquery-public-data.bls.employment_hours_earnings` as bls
+WHERE
+  bls.year = 1939
+  OR
+  bls.year = 1969
+  OR
+  bls.year = 1999
+  OR
+  bls.year = 2019
+GROUP BY
+  bls.year
+ORDER BY
+  bls.year
+  */
+  
+---------------------------------------------------------------------Q3. Use the table, Products, to answer the question: what is our lowest product price? 
+/*
+SELECT
+  min(prod.prod_price) as lowPrice
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+*/
+
+----------------------------------------------------------------------Q4. What were the total number of daily lighting strikes for June, July, August, and September 2017?
+
+SELECT
+  extract(month from noaa.date) as month,
+  sum(noaa.number_of_strikes) as totalStrikes
+  
+FROM
+  `bigquery-public-data.noaa_lightning.lightning_2017` as noaa
+GROUP BY
+  month
+order by
+  month
+
+
+
+---------------------------------------------------------------------------Q5. What are the average number of strikes per month across all days and locations?
+/*
+SELECT
+  count(noaa.number_of_strikes) as totalStrikes,
+  extract(month from noaa.date) as month,
+  round(avg(noaa.number_of_strikes),1) as avgStrikes
+FROM
+  `bigquery-public-data.noaa_lightning.lightning_2017` as noaa
+Group by
+  month
+*/
+
+--------------------------------------------------------------------------Q6. Which months had more than 4 million strikes when only including locations (center_point_geom) with 10 or more strikes on any particular date?
+/*
+SELECT
+  EXTRACT(month from light.date) as month,
+  sum(light.number_of_strikes) as totStrikes,
+  count(light.center_point_geom) as sampSize,
+  round(avg(light.number_of_strikes),1) as avgStrikes
+FROM
+  `bigquery-public-data.noaa_lightning.lightning_2017` as light
+WHERE
+  light.number_of_strikes > 10
+GROUP BY
+  month
+HAVING
+  totStrikes > 4000000
+*/
