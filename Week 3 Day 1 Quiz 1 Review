@@ -1,0 +1,60 @@
+--Week 3 Quiz 1 Review GoogleBigQuery
+
+--3.
+/*
+SELECT DISTINCT
+t.first_harmful_event_name
+FROM
+`bigquery-public-data.nhtsa_traffic_fatalities.accident_2016` as t
+*/
+
+--4.
+/*
+SELECT DISTINCT
+h.name,
+h.season
+FROM
+`bigquery-public-data.noaa_hurricanes.hurricanes` as h
+WHERE
+(h.name LIKE 'A%' OR h.name LIKE 'B%')
+AND
+h.season = '1990'
+ORDER BY
+h.name
+*/
+
+--6.
+/*
+SELECT
+b.gameId,
+b.attendance
+FROM
+`bigquery-public-data.baseball.games_wide` as b
+WHERE
+b.attendance > 50000
+*/
+
+--7.
+/*
+SELECT DISTINCT
+b.homeTeamName,
+b.awayTeamName,
+b.attendance
+
+FROM
+`bigquery-public-data.baseball.games_wide` as b
+
+ORDER BY
+b.attendance DESC
+*/
+
+--8.
+SELECT DISTINCT
+m.mascot
+FROM
+`bigquery-public-data.ncaa_basketball.mascots` as m
+WHERE
+m.mascot LIKE 'M%'
+ORDER BY
+m.mascot DESC
+#for reverse order^^^
