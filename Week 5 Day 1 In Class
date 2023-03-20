@@ -1,0 +1,107 @@
+--Week 5 Day 1 Warm-Up What vendors (vend_id) have an average product price greater than $9 when only considering product prices greater than $4?
+/*
+SELECT
+  prod.vend_id,
+  avg(prod.prod_price) as avgPrice
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.prod_price > 4
+GROUP BY
+  prod.vend_id 
+HAVING
+  avgPrice > 9
+*/
+--Week 5 Day 1 In-Class Activity
+--Q1 and 1a How many users have listened to any song by Chuck Berry?
+/*
+SELECT
+  lb.artist_name,
+  COUNT(lb.artist_name) as A,
+  COUNT(DISTINCT lb.user_name) as users,
+
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE 
+  lb.artist_name = 'Chuck Berry'
+GROUP BY
+  lb.artist_name 
+*/
+
+
+
+--Q2 What song was the most listened to song by Chuck Berry in the listenbrainz dataset?
+/*
+SELECT
+ lb.track_name,
+ COUNT(lb.listened_at) as listens,
+ COUNT(DISTINCT lb.user_name) AS users
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name LIKE 'Chuck Berry'
+GROUP BY
+  lb.track_name
+ORDER BY
+  listens DESC
+*/
+
+--Q3 What month did the most users listen to any of Whitney Houston's songs?
+/*
+SELECT
+  lb.artist_name,
+  COUNT(lb.listened_at) AS listens,
+  EXTRACT(month FROM lb.listened_at) AS month,
+  COUNT(DISTINCT lb.user_name) AS users,
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name LIKE 'Whitney Houston'
+GROUP BY
+  lb.artist_name,
+  month
+ORDER BY
+  listens DESC
+*/
+
+
+--Q4 MY ATTEMPt
+/*
+SELECT
+  lb.artist_name,
+  lb.track_name,
+  min(listened_at) as date,
+  COUNT(lb.listened_at) as listens,
+  COUNT(DISTINCT (lb.user_name)) as users,
+  ROUND(COUNT(lb.listened_at)/COUNT(DISTINCT (lb.user_name)),2) as avgListens
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name LIKE 'Sugarhill Gang'
+  OR
+  lb.artist_name LIKE 'Fatback Band'
+GROUP BY
+  lb.track_name,
+  lb.artist_name 
+ORDER BY
+  date
+*/
+---------------------------------ACTUAL Q4 What was the first rap group? The Sugarhill Gang or Fatback Band? Which group appears to be the most popular?
+SELECT
+ artist_name,
+ track_name,
+ MIN(listened_at) firstDate,
+ COUNT(listened_at) listens,
+ COUNT(DISTINCT user_name) as users,
+ ROUND(COUNT(listened_at)/COUNT(DISTINCT user_name),2) AS avgUserListens
+FROM
+  `listenbrainz.listenbrainz.listen`
+WHERE
+ artist_name in ('The Sugarhill Gang','Fatback Band')
+GROUP BY
+ artist_name,
+ track_name
+HAVING
+  listens >=10 AND users >=5
+ORDER BY
+  firstDate, listens DESC
