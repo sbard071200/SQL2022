@@ -1,0 +1,52 @@
+--Week 8 Day 1 Pre-Class Typealong ADV JOINS
+--First Question subset - Joining the customers and order tables
+
+--Q1. Who are all the customers with at least one order?
+--Show all the customer info and the order numbers
+/*
+SELECT
+  cust.*,
+  ord.order_num 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  INNER JOIN
+  `symmetric-aura-337805.styssql.orders` as ord
+  ON
+  cust.cust_id = ord.cust_id
+
+*/
+--Q2. Who are all the customers with or without an order?
+--Show cust_id, cust_name, cust_contact, order_num
+--Example of a LEFT JOIN
+--LEFT JOIN GIVES US ALL pay attention to questions
+/*
+SELECT
+  cust.cust_id,
+  cust.cust_name,
+  cust.cust_contact,
+  ord.order_num 
+  FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  LEFT JOIN
+    `symmetric-aura-337805.styssql.orders` as ord
+  ON
+  cust.cust_id = ord.cust_id 
+*/
+--Q3.What are the contact names and emails of everyone that works at the same company as Jim Jones?
+--Example of a self-join
+
+SELECT
+  cust1.cust_name,
+  cust1.cust_contact,
+  cust1.cust_email,
+  cust2.cust_contact as filter
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust1
+  INNER JOIN
+    `symmetric-aura-337805.styssql.customers` as cust2
+  ON
+    cust1.cust_name = cust2.cust_name 
+WHERE
+  cust2.cust_contact = 'Jim Jones'
+  
+
