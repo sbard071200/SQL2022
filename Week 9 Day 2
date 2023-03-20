@@ -1,0 +1,95 @@
+--Week 9 Day 2 In-Class
+--Q1. What are the total product sales and the employee contribution to the product sales?
+#The employee table is not shown in the ERD because it serves a different purpose in SaleCo's overall data structure. Use the employee table (not emp) for this problem in addition to any other tables that are shown in the ERD
+#Show product code, the product sales as pSales, the employee count as eCount, and the employee contribution as eContrib Employee contribution (eContrib) is the amount of product sales per employee
+#Use an in-line view to answer this question
+#Sort the results by product sales in descending order
+/*
+SELECT
+  prodSum.P_CODE,
+  prodSum.pSales,
+  prodSum.eCount,
+  ROUND(pSales/eCount,2) as eContrib
+  
+  
+
+FROM
+  (SELECT
+    line.P_CODE,
+    round(sum(line.LINE_UNITS *line.LINE_PRICE),2) AS pSales,
+   
+  
+    (SELECT
+      count(empl.EMP_NUM)
+      FROM
+      `symmetric-aura-337805.SaleCoDB.employee` as empl
+     ) as eCount,
+    
+    FROM
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    GROUP BY
+      line.P_CODE 
+   ) as prodSum
+  
+   
+ORDER BY
+  pSales DESC
+*/
+
+-----Q2. Who are the customers (if any) that purchased both the products with product codes (P_CODE) of 13-Q2/P2 and 23109-HB?
+# Show customer codes, customer first names, and customer last names in the result set
+#Show the total product quantities for each of the products aliased as follows:
+#Alias 13-Q2/P2 total quantity as: _13_Q2P2_Qty
+#Alias 23109-HB total quantity as: _23109-HB_Qty
+#Sort the customers by CUS_CODE in ascending order
+
+SELECT DISTINCT
+ cust.CUS_CODE,
+ cust.CUS_FNAME,
+ cust.CUS_LNAME,
+ prod13Qty,
+ prod231Qty 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+
+  INNER JOIN
+  
+  (SELECT DISTINCT
+    inv.CUS_CODE,
+    sum(line.LINE_UNITS) as prod13Qty
+   FROM
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+    WHERE
+      line.P_CODE = '13-Q2/P2'
+    GROUP BY
+      inv.CUS_CODE 
+    ) AS _13_Q2P2_Qty --this is the alias for the subquery which is a virtual table (in-line view)
+   
+   ON
+    cust.CUS_CODE = _13_Q2P2_Qty.CUS_CODE 
+
+   INNER JOIN
+   
+    (SELECT DISTINCT
+      inv.CUS_CODE,
+      sum(line.LINE_UNITS) as prod231Qty
+     FROM
+      `symmetric-aura-337805.SaleCoDB.invoice` as inv
+      INNER JOIN
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ON
+        inv.INV_NUMBER = line.INV_NUMBER 
+     WHERE
+      line.P_CODE = '23109-HB'
+     GROUP BY
+      inv.CUS_CODE 
+      ) as _23109_HB_Qty --aliasing the second subquery (in-line view)
+      
+    ON
+      _13_Q2P2_Qty.CUS_CODE = _23109_HB_Qty.CUS_CODE 
+ORDER BY
+  cust.CUS_CODE DESC
