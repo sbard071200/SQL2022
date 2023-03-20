@@ -1,0 +1,236 @@
+--Week 8 Quiz 4 
+--Q1. How many invoices does each customer have?
+
+/*
+SELECT
+  cust.CUS_CODE,
+  cust.CUS_FNAME,
+  cust.CUS_LNAME,
+  count(inv.INV_NUMBER) as cust_invoices
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  ON
+  cust.CUS_CODE = inv.CUS_CODE 
+GROUP BY
+  cust.CUS_CODE,
+  cust.CUS_FNAME,
+  cust.CUS_LNAME
+ORDER BY
+  cust_invoices DESC,
+  cust.CUS_LNAME 
+*/
+
+--Q2. Which products with at least 3 total units sold are SaleCo's best revenue generators?
+/*
+SELECT
+ prod.P_CODE,
+ prod.P_DESCRIPT,
+ prod.P_PRICE,
+ (line.LINE_UNITS * line.LINE_PRICE) as revenue
+FROM
+ `symmetric-aura-337805.SaleCoDB.product` as prod
+ LEFT JOIN
+  `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+  prod.P_CODE = line.P_CODE 
+WHERE
+  line.LINE_UNITS >= 3
+GROUP BY
+  prod.P_CODE,
+  prod.P_DESCRIPT,
+  prod.P_PRICE,
+  revenue
+ORDER BY
+  revenue DESC
+*/
+  
+--Q3. which customer has the 2nd most units purchased?
+/*
+SELECT
+  cust.CUS_FNAME,
+  cust.CUS_LNAME,
+  sum(line.LINE_UNITS) as units_purchased
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  ON
+    cust.CUS_CODE = inv.CUS_CODE
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+GROUP BY
+  cust.CUS_FNAME,
+  cust.CUS_LNAME
+ORDER BY
+  units_purchased DESC
+*/
+
+--Q4. What is each vendors average discount??
+
+SELECT
+  prod.v_code,
+  vend.v_name,
+  ROUND(AVG(prod.p_qoh),2) as avgQOH
+FROM
+  `symmetric-aura-337805.SaleCoDB.product`  as prod
+  LEFT JOIN
+  `symmetric-aura-337805.SaleCoDB.vendor`  as vend
+  ON
+  vend.v_code = prod.v_code
+GROUP BY
+  prod.v_code,
+  vend.v_name
+ORDER BY
+  avgQOH DESC
+
+--Q5. Which customers have a higher revenue (cus_revenue) than the average customer revenue (cus_avg_rev)?
+/*
+SELECT
+  cust.CUS_LNAME,
+  cust.CUS_FNAME,
+  round(sum((line.LINE_UNITS) * (line.LINE_PRICE)),2) as cus_revenue,
+--avgrev
+ (SELECT
+    sum(line.LINE_UNITS * line.LINE_PRICE)
+  FROM
+   `symmetric-aura-337805.SaleCoDB.line` as line
+ )
+ 
+ /
+ (SELECT
+  count(cust.CUS_CODE)
+  FROM
+    `symmetric-aura-337805.SaleCoDB.customer` as cust)
+    as avgCR
+  
+  
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  ON
+    cust.CUS_CODE = inv.CUS_CODE
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+GROUP BY
+  cust.CUS_LNAME,
+  cust.CUS_FNAME
+ORDER BY
+  cus_revenue DESC
+
+
+*/
+
+
+----------------------------------------------------------------Revisions----------------------------------------------------------------
+--Q10. Correct
+/*
+SELECT
+  cust.cus_code,
+  cust.cus_fname,
+  cust.cus_lname,
+  COUNT(inv_number) AS custInvoices
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer`  AS cust
+  INNER JOIN
+   `symmetric-aura-337805.SaleCoDB.invoice`  AS inv
+   ON
+   cust.cus_code = inv.cus_code
+GROUP BY
+  cust.cus_code,
+  cust.cus_fname,
+  cust.cus_lname
+ORDER BY
+  custInvoices DESC, cust.cus_lname 
+*/
+
+--Q12. Wrong
+/*
+SELECT
+  prod.p_code,
+  prod.p_descript,
+  prod.p_price,
+  SUM(line.line_units) AS totUnitsSold,
+  ROUND(SUM(LINE.line_units * LINE.line_price),2) as revenue
+FROM
+  `symmetric-aura-337805.SaleCoDB.product`  as prod
+  INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.line`   as line
+  ON
+  prod.p_code = line.p_code
+GROUP BY
+  prod.p_code,
+  prod.p_descript,
+  prod.p_price
+HAVING
+  totUnitsSold >=3
+ORDER BY
+  revenue DESC
+*/
+
+--Q.14 WRONG
+
+SELECT
+  prod.v_code,
+  vend.v_name,
+  ROUND(AVG(prod.P_DISCOUNT ),2) as avgQOH
+FROM
+  `symmetric-aura-337805.SaleCoDB.product`  as prod
+  LEFT JOIN
+  `symmetric-aura-337805.SaleCoDB.vendor`  as vend
+  ON
+  vend.v_code = prod.v_code
+GROUP BY
+  prod.v_code,
+  vend.v_name
+ORDER BY
+  avgQOH DESC
+
+
+--Q.16
+/*
+SELECT
+  cust.cus_code,
+  cust.cus_lname,
+  cust.cus_fname,
+  ROUND(SUM(line.LINE_UNITS * line.line_price),2) as custRev,
+  (SELECT AS STRUCT
+    ROUND(
+    SUM(line.line_units * line.line_price)
+    /
+    COUNT(DISTINCT inv.cus_code)
+    ,2) as avgRev,
+    ROUND(SUM(line.line_units * line.line_price),2) as totRev,
+    COUNT(DISTINCT inv.CUS_CODE) as totCusts
+   FROM
+    `symmetric-aura-337805.SaleCoDB.line`  AS line
+    INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice`  as inv
+    ON
+    line.INV_NUMBER = inv.INV_NUMBER
+   ) as totals
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer`  as cust
+  INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.invoice`  as inv
+  ON
+  cust.cus_code = inv.cus_code
+  INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.line`  as line
+  ON
+  inv.INV_NUMBER = line.INV_NUMBER 
+GROUP BY
+  cust.cus_code,
+  cust.cus_lname,
+  cust.cus_fname
+HAVING
+  custRev < totals.AvgRev
+ORDER BY
+  custRev 
+*/
