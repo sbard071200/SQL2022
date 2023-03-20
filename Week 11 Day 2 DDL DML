@@ -1,0 +1,69 @@
+--Week 11 Day 2 In-Class DDL and DML Practice
+--CREATE TALBE
+/*
+CREATE TABLE
+  `MYDB.classicrock`
+AS
+SELECT
+  *
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name IN ('Led Zeppelin','AC/DC','ZZ Top','Def Leppard')
+;
+--ADD NEW ARTISTS
+INSERT INTO
+  `MYDB.classicrock`
+SELECT
+  *
+FROM
+  `listenbrainz.listenbrainz.listen` as lb
+WHERE
+  lb.artist_name IN ('Creedence Clearwater Revival','Kiss','Steve Miller Band')
+;
+--ADD COLUMNS NAMED GENRE
+ALTER TABLE
+  `MYDB.classicrock`
+ADD COLUMN
+  genre STRING
+;
+--UPDATED RECORDS IN TABLE to "CLASSIC ROCK"
+UPDATE
+  `MYDB.classicrock`
+SET
+  genre = 'Classic Rock'
+WHERE
+  genre IS NULL
+;
+*/
+--Q5. How many total records are in the classicrock table?
+#600148
+
+
+
+--How many records does each artist in the classic rock table have?
+/*
+SELECT
+  artist_name,
+  count(artist_name) as recordcount
+FROM
+  `symmetric-aura-337805.MYDB.classicrock`
+GROUP BY
+  artist_name
+ORDER BY
+  recordcount DESC
+*/
+--Q7. How much data does BigQuery indicate will be processed with the following query?
+/*
+SELECT
+  *
+FROM
+  `listenbrainz.listenbrainz.listen` 
+*/
+
+--Q8. How much data does bigquery indicate will be processed with the classicrock dataset
+
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.MYDB.classicrock` 
