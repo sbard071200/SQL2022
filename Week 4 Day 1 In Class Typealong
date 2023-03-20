@@ -1,0 +1,49 @@
+--Week 4 Day 1 In Class Typealong and Excercise
+--Q1. Select first 4 of cust name and last 4 of custid
+/*
+
+SELECT
+    cust.cust_name,
+    cust.cust_id,
+    LEFT(cust.cust_name, 4) AS l4_fName,
+    RIGHT(CAST(cust.cust_id AS STRING), 4) as l4_custID,
+    #CAST(LEFT(cust.cust_city, 4) AS STRING),you can syntax cast like this too/ swtich around functions
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+*/
+--Q2. What are the longest names that end with "en?"
+/*
+SELECT DISTINCT
+  usa.name,
+  LENGTH(usa.name) as char_count,
+  FROM
+ `bigquery-public-data.usa_names.usa_1910_current` as usa
+WHERE
+  usa.name LIKE '%en'
+ORDER BY 
+  char_count DESC,
+  usa.name
+ */
+ 
+ --Q3. Create a new field from the usa_names,usa_1910_current
+ /*
+SELECT
+  concat(dat.name,'-',dat.state,'-',dat.year,'-',dat.number) AS name_st_year_count
+FROM
+  `bigquery-public-data.usa_names.usa_1910_current` as dat
+WHERE
+  dat.state = 'CO'
+ORDER BY
+  name_st_year_count ASC
+*/
+  
+--Q4.
+
+SELECT
+ ROUND(SUM(sea_level_pressure)/1000000,2) AS tot_pressure_M,
+ CONCAT(ROUND(COUNT(sea_level_pressure)/1000000,2),'M') as record_count_M,
+ ROUND(AVG(sea_level_pressure),2) as avg_pressure_1,
+ ROUND(SUM(sea_level_pressure)/COUNT(sea_level_pressure),2) as avg_pressure_2
+
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2017`
