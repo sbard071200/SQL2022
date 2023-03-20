@@ -1,0 +1,158 @@
+--Week 9 Day 1 In Class
+--Warm Up. What is the vendor average units sold per invoice?
+#show vend code, vend name, and avg units sold per invoice for any in house products
+#return total number of invoices for each vendor, total quantity for each vendor and average per invoce for each vendor
+#calculate overall average units sold per invoice
+#sort by vendor average in DESC
+#avg per invoice per each vendor
+/*
+SELECT
+vend.V_CODE,
+vend.V_NAME,
+
+--TOTAL UNITS FOR EACH VENDOR
+SUM (line.LINE_UNITS) as vendUnits,
+
+--TOTAL INVOICES FOR EACH VENDOR
+COUNT(DISTINCT line.INV_NUMBER) as numInvoices,
+
+-- NOW DIVIDE THE VALUE WE GET FROM VENDUNITS AND NUMINVOICES
+---- SUM(line.LINE_UNITS) / COUNT(DISTINCT line.INV_NUMBER) as avgunits_vend,
+
+  ROUND(SUM(line.LINE_UNITS)
+  /
+  COUNT(DISTINCT line.INV_NUMBER),2
+  ) as vend_avg_per_invoice,
+
+--- saleco overall. avg per invoice for the entire company.
+  (SELECT
+     ROUND(SUM(line.LINE_UNITS),2)
+     /
+     COUNT(DISTINCT line.INV_NUMBER)
+   FROM
+  `symmetric-aura-337805.SaleCoDB.line`  as line
+   ) as saleco_avg_per_inv
+
+FROM
+`symmetric-aura-337805.SaleCoDB.line`  as line
+
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.product`  as prod
+  ON
+    line.P_CODE = prod.P_CODE
+  LEFT JOIN
+  `symmetric-aura-337805.SaleCoDB.vendor`  as vend
+  ON
+   prod.V_CODE = vend.V_CODE
+
+GROUP BY
+  vend.V_CODE,
+  vend.V_NAME
+
+ORDER BY
+  vend_avg_per_invoice DESC
+*/
+
+--Q1. Question: Who are all our customers in our database now that we have acquired another company?
+
+SELECT
+  cust.CUS_LNAME as lastname,
+  cust.CUS_FNAME as firstname,
+  cust.CUS_AREACODE,
+  cust.CUS_PHONE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+
+UNION DISTINCT
+
+SELECT
+  cust2.CUS_LNAME,
+  cust2.CUS_FNAME,
+  cust2.CUS_AREACODE,
+  cust2.CUS_PHONE 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer_2` as cust2
+
+ORDER BY
+ lastname,
+ firstname
+;
+
+--Q2.  Who are all our customers in our database now that we have acquired another company?
+# Include Duplicates
+# Sort the combined list of customers by last name then first name in reverse ABC order
+
+SELECT
+  cust.CUS_FNAME as firstname,
+  cust.CUS_LNAME as lastname
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer`  as cust
+
+UNION ALL
+
+SELECT
+  cust2.CUS_FNAME,
+  cust2.CUS_LNAME,
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer_2`  as cust2
+
+ORDER BY
+  lastname DESC,
+  firstname DESC
+;
+
+--Q3. Q3 WHO ARE THE CUSTOMERS OF BOTH SALECO AND OF THE ACQUIRED COMPANY
+#ORDER BY LAST NAME, FIRST NAME ABC.
+
+SELECT
+  cust.CUS_LNAME as lastname,
+  cust.CUS_FNAME as firstname
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer`  as cust
+
+INTERSECT DISTINCT
+
+-- only give me records that exist between both. similar to inner join
+SELECT
+  cust2.CUS_LNAME,
+  cust2.CUS_FNAME
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer_2`  as cust2
+ORDER BY
+  lastname,
+  firstname
+;
+--same as INTERSECT DISTINCT
+#Q3 INNER JOIN 
+/*
+SELECT
+  *
+FROM 
+  `symmetric-aura-337805.SaleCoDB.customer`  as cust 
+  INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.customer_2`  as cust2 
+  ON cust.CUS_LNAME = cust2.CUS_LNAME AND cust.CUS_FNAME = cust2.CUS_FNAME
+ORDER BY
+  cust.CUS_LNAME,
+  cust.CUS_FNAME 
+*/
+
+--Q4. WHO ARE ALL SALECO CUSTOMERS THAT WERE NOT CUSOTMERS OF THE NEWLY ACQUIRED COMPANY
+
+SELECT
+  cust.CUS_LNAME as lastname,
+  cust.CUS_FNAME as firstname
+FROM
+ `symmetric-aura-337805.SaleCoDB.customer`  as cust
+
+EXCEPT DISTINCT
+
+SELECT
+  cust2.CUS_LNAME,
+  cust2.CUS_FNAME
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer_2`  as cust2
+
+ORDER BY
+  lastname,
+  firstname
