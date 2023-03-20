@@ -1,0 +1,63 @@
+--Week 7 Day 2 JOINS
+--Q1. What are the customer IDS, names, addresses, city, ordernumber, and orderdates for all customers? Join in the where clause
+/*
+SELECT
+  cust.cust_id,
+  cust.cust_name,
+  cust.cust_address,
+  cust.cust_city,
+  ord.order_num,
+  ord.order_date 
+FROM
+ `symmetric-aura-337805.styssql.customers` as cust,
+ `symmetric-aura-337805.styssql.orders` as ord
+#One way to create a join is in the where clause
+WHERE
+  cust.cust_id = ord.cust_id 
+;
+--Q1b. What are the ids, names, addresses, city, order numbers, and order dates of all customers?
+--WE ARE JOINING USING THE FROM CLAUSE WHICH IS THE MAIN WAY TO JOIN QUERIES
+SELECT
+  cust.cust_id,
+  cust.cust_name,
+  cust.cust_address,
+  cust.cust_city,
+  ord.order_num,
+  ord.order_date
+
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  INNER JOIN
+  `symmetric-aura-337805.styssql.orders` as ord
+  ON
+  cust.cust_id = ord.cust_id 
+*/
+
+#Cartesian Product isnt what we want
+#What happens if we dont join the tables??
+#In video we see that we get 25 records because it joined all records from first and second tables 5*5 = 25 different records
+
+
+--Q2. What are the order numbers, order items, product ids, and quantity for all customers
+--Additional Specs:
+--Include: Customer ID, Customer Names, Order Numbers, Order Items. Product IDS, and quantity in the output
+--Join syntax in the from statement WHICH IS THE MAIN WAY
+
+SELECT
+  cust.cust_id,
+  cust.cust_name,
+  ord.order_num,
+  ordI.order_item,
+  ordI.prod_id,
+  ordI.quantity 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+  INNER JOIN
+    `symmetric-aura-337805.styssql.orders` as ord
+    ON
+    cust.cust_id = ord.cust_id 
+  INNER JOIN
+    `symmetric-aura-337805.styssql.order_items` as ordI
+    ON
+    ord.order_num = ordI.order_num 
+
