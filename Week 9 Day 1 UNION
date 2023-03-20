@@ -1,0 +1,56 @@
+--Week 9 Day 1 Typealong Videos UNION
+
+--Q1. Who are all the customer contacts from Illinios, Indiana or Michigan or work for Fun4All?
+#Include customer name, contact name, email, and state.
+
+
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  cust.cust_email,
+  cust.cust_state 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_state IN ('IL', 'IN', 'MI')
+
+UNION DISTINCT
+
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  cust.cust_email,
+  cust.cust_state
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_name = 'Fun4All'
+;
+
+--Q2. Who are all the customer contacts from Illinios, Indiana or Michigan or work for Fun4All?
+#Include customer name, contact name, email, and state.
+#Include potential duplicate contacts
+
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  cust.cust_email,
+  cust.cust_state 
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_state IN ('IL', 'IN', 'MI')
+
+UNION ALL
+
+SELECT
+  cust.cust_name,
+  cust.cust_contact,
+  cust.cust_email,
+  cust.cust_state
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_name = 'Fun4All'
+
+# UNION DISTINCT is to ignore duplicates
