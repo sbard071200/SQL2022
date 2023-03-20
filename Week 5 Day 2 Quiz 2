@@ -1,0 +1,164 @@
+--bigquery-public-data.bls.employment_hours_earnings Quiz 2 review
+--bigquery-public-data.noaa_lightning.lightning_ (various years could be used) Quiz 2 Review
+--bigquery-public-data.noaa_icoads.icoads_core_ (various years could be used) Week 4 Day 2 in Class
+--bigquery-public-data.cfpb_complaints.complaint_database
+--bigquery-public-data.census_bureau_usa.population_by_zip_2010 (2000 could also be used) 
+--bigquery-public-data.noaa_significant_earthquakes.earthquakes similar to lightning but way more
+
+-------------------------------------------------------------------------Q1. What were the average quarterly price indexes (rounded to two decimal places) for 2019? 
+/*
+ SELECT
+  EXTRACT(Quarter from bls.date) as quarter,
+  ROUND(avg(bls.value),2) as avgPrice
+FROM
+`bigquery-public-data.bls.employment_hours_earnings` as bls
+WHERE
+bls.year = 2019
+GROUP BY
+quarter
+*/
+
+-----------------------------------------------------Q2. What months did not have more than 1 million lighting strikes in 2017? 
+/*
+SELECT
+  EXTRACT(month from light.date) as month,
+  sum(light.number_of_strikes) as totStrikes,
+  count(light.center_point_geom) as sampSize,
+  round(avg(light.number_of_strikes),1) as avgStrikes
+FROM
+  `bigquery-public-data.noaa_lightning.lightning_2017` as light
+GROUP BY
+  month
+HAVING
+  totStrikes < 1000000
+*/
+------------------------------------------------------------------Q4. What is the average sea level pressure rounded to 2 decimal places?
+/*
+SELECT
+  ROUND(AVG(noaa.sea_level_pressure),2) AS avgSlp,
+FROM 
+  `bigquery-public-data.noaa_icoads.icoads_core_2009` AS noaa
+ORDER BY
+  avgSlp DESC
+*/
+
+----------------------------------------------------Q6. Which product had the least complaints?
+/*
+SELECT
+  com.product,
+  COUNT(com.complaint_id) as complaints
+FROM
+  `bigquery-public-data.cfpb_complaints.complaint_database` as com
+GROUP BY
+  com.product
+ORDER BY
+  complaints AS
+*/
+----------------------------------------------------Q8. Which 3 zip codes have the largest population?
+/*
+SELECT
+  cPop.zipcode,
+  cPop.population
+FROM
+  `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as cPop
+ORDER BY
+  cPop.population DESC
+*/
+----------------------------------------------------------------------------------Q.10 How many total complaints were there in January 2019? 
+/*
+SELECT
+  EXTRACT(month from com.date_received) as month,
+  EXTRACT(year from com.date_received) as year,
+  COUNT(com.complaint_id) as complaints
+
+FROM
+  `bigquery-public-data.cfpb_complaints.complaint_database` as com
+GROUP BY
+  month,
+  year
+ORDER BY
+  year
+*/
+
+----------------------------------------------------------------------------Q.12 What is the average monthly ship speed in January and February for ship courses 1 and 2?  
+/*
+SELECT
+  noa.month,
+  noa.ship_course,
+  ROUND(AVG(noa.ship_speed),2) as avgSpeed
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2009` as noa
+WHERE 
+  noa.ship_course = 1
+  OR
+  noa.ship_course = 2
+  AND
+  (noa.month = 1
+  OR
+  noa.month = 2)
+GROUP BY
+  noa.ship_course,
+  noa.month
+ORDER BY
+  noa.month,
+  noa.ship_course 
+*/
+
+-------------------------------------------------------------------------------------------------Q14/16. What was the average damage (in millions of dollars) for earthquakes in Greece?
+/*
+SELECT
+  eq.country,
+  ROUND(AVG(eq.damage_millions_dollars),2) as avgDmg
+  
+FROM
+  `bigquery-public-data.noaa_significant_earthquakes.earthquakes` as eq
+WHERE
+  eq.country = 'ITALY'
+  AND
+  eq.year IN (2010, 2011, 2012, 2013, 2014, 2015)
+  AND
+  eq.eq_primary > 4
+GROUP BY
+  eq.country
+*/
+---------------------------------------------------------------------------------------Q18. How many zip codes have an average female population across all age segments greater than 2000 and a total female population greater than 50,000?
+/*
+SELECT
+  zip.zipcode,
+  sum(zip.population) AS totPop,
+  round(avg(zip.population),2) as avgPop
+FROM
+  `bigquery-public-data.census_bureau_usa.population_by_zip_2010` as zip
+WHERE
+  zip.gender = 'female'
+  AND
+  zip.population > 50000
+GROUP BY
+  zip.zipcode 
+HAVING
+  avgPop > 2000
+ORDER BY
+  avgPop
+*/
+
+--Q18 Actual
+
+SELECT
+ zipcode,
+ ROUND(AVG(population),2) AS avgPop,
+ SUM(population) AS totPop
+FROM
+  `bigquery-public-data.census_bureau_usa.population_by_zip_2010` 
+WHERE
+ minimum_age IS NOT NULL 
+ AND
+ GENDER = 'female'
+GROUP BY
+  zipcode,
+  gender
+HAVING
+  avgPop >2000
+  AND
+  totPop >50000
+ORDER BY
+  totPop DESC
