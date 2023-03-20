@@ -1,0 +1,221 @@
+--Midterm EOC
+--Q1.
+/*
+SELECT DISTINCT
+   mas.mascot,
+   COUNT(mas.mascot) as Moccur
+FROM
+   `bigquery-public-data.ncaa_basketball.mascots` as mas
+WHERE
+   mas.mascot IS NOT NULL
+GROUP BY
+   mas.mascot
+ORDER BY
+   Moccur DESC
+*/
+
+--Q2.
+/*
+SELECT
+   ncaa.venue_capacity,
+   ncaa.venue_city,
+   ncaa.venue_name,
+   (SELECT
+      COUNT(ncaa.venue_id)
+    FROM
+      `bigquery-public-data.ncaa_basketball.mbb_teams` as ncaa
+    WHERE
+      ncaa.venue_capacity > 20000
+    ) as venueCount
+FROM
+   `bigquery-public-data.ncaa_basketball.mbb_teams` as ncaa
+WHERE
+   ncaa.venue_capacity > 20000
+GROUP BY
+   ncaa.venue_capacity,
+   ncaa.venue_city,
+   ncaa.venue_name
+ORDER BY
+   ncaa.venue_capacity DESC
+*/
+
+--Q3.
+/*
+SELECT DISTINCT 
+   ndata.name,
+   SUM(ndata.number) as Noccur,
+FROM
+   `bigquery-public-data.usa_names.usa_1910_2013` as ndata
+WHERE
+   ndata.state = 'CO'
+   AND
+   ndata.gender = 'M'
+   AND
+   ndata.year BETWEEN 1910 AND 1913
+ GROUP BY
+   ndata.name
+ORDER BY
+   Noccur DESC
+*/
+
+--Q4.
+/*
+SELECT
+  emp.EMP_LNAME,
+  (SELECT
+    COUNT(DISTINCT(emp.EMP_NUM))
+   FROM
+    `symmetric-aura-337805.ConstrucCo.employee` as emp
+   WHERE
+    emp.EMP_LNAME LIKE 'Jo%'
+   ) as totalEmpCount,
+ 
+   (SELECT
+      SUM(emp.EMP_YEARS)
+    FROM
+    `symmetric-aura-337805.ConstrucCo.employee`  as emp
+    WHERE
+      emp.EMP_LNAME LIKE 'Jo%'
+    ) as totalYears,
+ 
+    (SELECT
+      ROUND(AVG(emp.EMP_YEARS),2)
+     FROM
+     `symmetric-aura-337805.ConstrucCo.employee`  as emp
+     WHERE
+      emp.EMP_LNAME LIKE 'Jo%'
+     ) as avgYears
+FROM
+  `symmetric-aura-337805.ConstrucCo.employee` as emp
+WHERE
+   emp.EMP_LNAME LIKE 'Jo%'
+*/
+
+--Q5.
+/*
+SELECT
+   noaa.month,
+   ROUND(AVG(noaa.air_temperature),2) as moAvgTemp,
+   (SELECT
+      ROUND(AVG(noaa.air_temperature),2)
+    FROM
+      `bigquery-public-data.noaa_icoads.icoads_core_2017` as noaa
+    ) as ovAvgTemp
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2017` as noaa
+GROUP BY
+  noaa.month
+HAVING
+   moAvgTemp
+   >
+   ovAvgTemp
+ORDER BY
+   moAvgTemp DESC
+*/
+
+--Q6.
+/*
+SELECT
+   prod.P_CODE,
+   prod.P_DESCRIPT,
+   vend.V_NAME,
+   vend.V_CONTACT,
+   prod.P_QOH,
+   line.LINE_UNITS,
+ 
+   (SELECT
+      COUNT(DISTINCT(prod.P_CODE))
+    FROM
+      `symmetric-aura-337805.SaleCoDB.product` as prod
+      LEFT JOIN
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ON
+        prod.P_CODE = line.P_CODE
+     WHERE
+      line.LINE_UNITS IS NULL
+    ) as totalProds
+FROM
+  `symmetric-aura-337805.SaleCoDB.vendor` as vend
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.product` as prod
+   ON
+    vend.V_CODE = prod.V_CODE
+   LEFT JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+   ON
+    prod.P_CODE = line.P_CODE
+WHERE
+   line.LINE_UNITS IS NULL
+ORDER BY
+   prod.P_QOH DESC
+*/
+
+--Q7.
+
+SELECT
+   emp.EMP_NUM,
+   emp.EMP_LNAME,
+   proj15charge,
+   proj25charge,
+ 
+   (SELECT
+      ROUND(SUM(assign.ASSIGN_CHARGE),2)
+    FROM
+      `symmetric-aura-337805.ConstrucCo.assignment` as assign
+    WHERE
+      assign.PROJ_NUM = 15
+    ) as proj15total,
+ 
+    (SELECT
+      ROUND(SUM(assign.ASSIGN_CHARGE),2)
+     FROM
+      `symmetric-aura-337805.ConstrucCo.assignment` as assign
+     WHERE
+      assign.PROJ_NUM = 25
+     ) as proj25total
+
+FROM
+  `symmetric-aura-337805.ConstrucCo.employee` as emp
+  
+  INNER JOIN
+  
+  (SELECT
+    assign.EMP_NUM,
+    ROUND(SUM(assign.ASSIGN_CHARGE),2) as proj15charge
+   FROM
+     `symmetric-aura-337805.ConstrucCo.assignment`  as assign
+    INNER JOIN
+      `symmetric-aura-337805.ConstrucCo.project` as pro
+    ON
+      assign.PROJ_NUM = pro.PROJ_NUM
+    WHERE
+     pro.PROJ_NUM = 15
+    GROUP BY
+     assign.EMP_NUM
+    ) as proj15
+   
+   ON
+   emp.EMP_NUM = proj15.EMP_NUM
+ 
+   INNER JOIN
+   
+   (SELECT
+      assign.EMP_NUM,
+      ROUND(SUM(assign.ASSIGN_CHARGE),2) as proj25charge
+    FROM
+      `symmetric-aura-337805.ConstrucCo.assignment`  as assign
+    INNER JOIN
+      `symmetric-aura-337805.ConstrucCo.project` as pro
+    ON
+      assign.PROJ_NUM = pro.PROJ_NUM
+    WHERE
+      pro.PROJ_NUM = 25
+    GROUP BY
+      assign.EMP_NUM
+    ) as proj25
+   
+   ON
+   proj15.EMP_NUM = proj25.EMP_NUM
+ 
+ORDER BY
+   emp.EMP_NUM ASC
