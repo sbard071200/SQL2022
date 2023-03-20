@@ -1,0 +1,80 @@
+--Week 4 Day 2 In Class
+--Warm up
+/*
+SELECT
+  prod.vend_id,
+  avg(prod.prod_price) as avgOver4,
+
+FROM
+  `symmetric-aura-337805.styssql.products` as prod
+WHERE
+  prod.prod_price > 4
+GROUP BY
+  prod.vend_id 
+HAVING
+  avgOver4 > 9
+ */
+ 
+---------------------------------------------------------------Q1
+/*
+SELECT
+  drug.recalling_firm,
+  count(drug.recall_number) as recalls
+
+FROM
+  `bigquery-public-data.fda_drug.drug_enforcement` as drug
+GROUP BY
+  drug.recalling_firm
+ORDER BY
+  recalls DESC
+*/
+
+----------------------------------------------------------------Q2
+/*
+SELECT
+  drug.recalling_firm,
+  count(drug.recall_number) as recalls
+
+FROM
+  `bigquery-public-data.fda_drug.drug_enforcement` as drug
+WHERE
+  drug.classification = 'Class I'
+GROUP BY
+  drug.recalling_firm
+ORDER BY
+  recalls DESC
+*/
+
+----------------------------------------------------------------Q4 and Q5.
+/*
+SELECT
+  noaa.ship_course,
+  round(avg(noaa.sea_level_pressure),2) as avgSlp,
+
+FROM 
+  `bigquery-public-data.noaa_icoads.icoads_core_2017` as noaa
+WHERE
+  noaa.ship_course IS NOT NULL
+GROUP BY
+  noaa.ship_course 
+HAVING 
+  avgSlp > 1014
+ORDER BY
+  avgSlp DESC
+*/
+----------------------------------------------------------------------Q3.
+
+/*
+SELECT
+  drug.recalling_firm,
+ count(drug.recalling_firm) as totCall,
+  count(drug.classification) as dClass
+FROM
+  `bigquery-public-data.fda_drug.drug_enforcement` as drug
+WHERE
+  drug.classification = 'Class I'
+GROUP BY
+ drug.recalling_firm
+ORDER BY
+  dClass Desc
+*/
