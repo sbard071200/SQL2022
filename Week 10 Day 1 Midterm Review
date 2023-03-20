@@ -1,0 +1,257 @@
+--Week 10 Day 1 Midterm Review Code
+--Q1. Who are all our customers that do not have emails in our database?
+/*
+SELECT
+  *
+FROM
+  `symmetric-aura-337805.styssql.customers` as cust
+WHERE
+  cust.cust_email IS NULL
+*/
+
+--Q2. What are the total items ordered for items with "BR" in their product ID and total order quantity greater than 40?
+#Show order numbers and their total number of items ordered. 
+#Sort by total items from highest to lowest
+#Name your total quantity field: total_items
+#Don't use more tables than you have to answer the question and follow the specifications
+
+/*
+SELECT
+  OrderItems.order_num,
+  SUM(OrderItems.quantity) AS total_items
+FROM
+  `symmetric-aura-337805.styssql.order_items`  AS OrderItems
+WHERE
+  OrderItems.prod_id LIKE('%BR%')
+GROUP BY
+  OrderItems.order_num
+HAVING
+   total_items>40
+ORDER BY
+  total_items DESC
+*/
+
+--Q4.  What is the total order quantity for all order numbers (order_num) with total order quantities over 400? 
+/*
+SELECT
+   ordI.order_num,
+  sum(ordI.quantity) as ordTotal
+FROM
+  `symmetric-aura-337805.styssql.order_items`  as ordI
+GROUP BY
+  ordI.order_num
+HAVING
+  ordTotal > 400
+*/
+
+--Q5. What are the 5 most common mascots?
+/*
+SELECT
+  mas.mascot,
+  count(mas.mascot) as tot_mascots
+FROM
+  `bigquery-public-data.ncaa_basketball.mascots` as mas
+GROUP BY
+  mas.mascot 
+ORDER BY
+  tot_mascots DESC
+*/
+
+--Q6. Which State has the most D1 (Division 1) teams? 
+/*
+SELECT
+  teams.venue_state,
+  count(teams.name) as totTeams
+FROM
+  `bigquery-public-data.ncaa_basketball.mbb_teams` as teams
+WHERE
+  teams.division_alias = 'D1'
+GROUP BY
+  teams.venue_state
+ORDER BY
+  totTeams Desc
+*/
+
+--Q7. Question: How many Venues have greater than 6000 seats?
+/*
+SELECT
+    count(teams.name) as totTeams
+FROM
+  `bigquery-public-data.ncaa_basketball.mbb_teams` as teams
+WHERE
+  teams.venue_capacity > 6000
+*/
+
+--Q8. Which species of tree have Less than 100 total trees?
+
+--Q9. Write a query using a Union that will connect the two tables and include duplicates
+/*
+SELECT
+CUS_CODE, CUS_LNAME, CUS_FNAME, CUS_INITIAL, CUS_AREACODE, CUS_PHONE
+FROM
+CUSTOMER
+UNION ALL
+SELECT
+CUS_CODE, CUS_LNAME, CUS_FNAME, CUS_INITIAL, CUS_AREACODE, CUS_PHONE
+FROM
+CUSTOMER_2
+*/
+
+--Q10. How many invoices does each customer have?
+/*
+SELECT 
+  Cust.CUS_CODE, 
+  Cust.CUS_FNAME, 
+  Cust.CUS_LNAME, 
+  COUNT(INV_NUMBER) as Total_Invoices
+
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer`  AS Cust
+INNER JOIN
+`symmetric-aura-337805.SaleCoDB.invoice`  AS Inv
+ON 
+  Cust.CUS_CODE=Inv.CUS_CODE
+Group by 
+Cust.CUS_CODE, 
+Cust.CUS_FNAME, 
+Cust.CUS_LNAME
+order by 
+  Total_invoices DESC
+*/
+
+--Q11. Which customer had the 3rd most units purchased?
+/*
+SELECT
+  cust.CUS_FNAME,
+  cust.CUS_LNAME,
+  sum(line.LINE_UNITS) as total_units_purchased
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  ON
+  cust.CUS_CODE = inv.CUS_CODE 
+INNER JOIN
+  `symmetric-aura-337805.SaleCoDB.line` as line
+  ON
+  inv.INV_NUMBER = line.INV_NUMBER 
+GROUP BY
+  cust.CUS_FNAME,
+  cust.CUS_LNAME
+ORDER BY
+  total_units_purchased DESC
+*/
+
+--Q12. What are all the products with a price less than the average product price? 
+/*
+SELECT
+  prod.p_code, 
+  prod.p_price,
+  (SELECT 
+    round(avg(prod.p_price),2) 
+   FROM 
+    `symmetric-aura-337805.SaleCoDB.product`  AS prod
+   ) as avgPrice
+FROM
+  `symmetric-aura-337805.SaleCoDB.product`  as prod
+GROUP BY
+  prod.P_CODE,
+  prod.P_PRICE
+HAVING
+  prod.P_PRICE < avgPrice
+*/
+------------------------------------------------OR
+/*
+WHERE
+  prod.P_Price < 
+  (SELECT avg(prod.p_price) 
+   FROM
+    `symmetric-aura-337805.SaleCoDB.product` AS prod
+   )
+*/
+
+--Q13. Who are all the customers that have purchased the products with product ids of:  '13-Q2/P2' AND '23109-HB'? IN LINE VIEWS
+/*
+SELECT DISTINCT
+ cust.CUS_CODE,
+ cust.CUS_FNAME,
+ cust.CUS_LNAME,
+ prod13Qty,
+ prod231Qty 
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+
+  INNER JOIN
+  
+  (SELECT DISTINCT
+    inv.CUS_CODE,
+    sum(line.LINE_UNITS) as prod13Qty
+   FROM
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER 
+    WHERE
+      line.P_CODE = '13-Q2/P2'
+    GROUP BY
+      inv.CUS_CODE 
+    ) AS _13_Q2P2_Qty --this is the alias for the subquery which is a virtual table (in-line view)
+   
+   ON
+    cust.CUS_CODE = _13_Q2P2_Qty.CUS_CODE 
+
+   INNER JOIN
+   
+    (SELECT DISTINCT
+      inv.CUS_CODE,
+      sum(line.LINE_UNITS) as prod231Qty
+     FROM
+      `symmetric-aura-337805.SaleCoDB.invoice` as inv
+      INNER JOIN
+        `symmetric-aura-337805.SaleCoDB.line` as line
+      ON
+        inv.INV_NUMBER = line.INV_NUMBER 
+     WHERE
+      line.P_CODE = '23109-HB'
+     GROUP BY
+      inv.CUS_CODE 
+      ) as _23109_HB_Qty --aliasing the second subquery (in-line view)
+      
+    ON
+      _13_Q2P2_Qty.CUS_CODE = _23109_HB_Qty.CUS_CODE 
+ORDER BY
+  cust.CUS_CODE DESC
+*/
+
+--Q14. What firm has the most recalls of any kind? Who has the most dangerouse ones? "Class I"
+/*
+SELECT
+  fda.recalling_firm as firm,
+  count(fda.classification) as Recalls
+FROM
+  `bigquery-public-data.fda_drug.drug_enforcement` as fda
+WHERE
+  fda.classification = 'Class I'
+GROUP BY
+  firm
+ORDER BY
+  recalls DESC
+*/
+--Q15. How many Class I 2 and 3 recalls have there been reported in the month of January?
+
+SELECT
+  drug.classification,
+  COUNT(drug.recall_number) AS recalls
+FROM
+  `bigquery-public-data.fda_drug.drug_enforcement` as drug
+WHERE
+  EXTRACT(month from report_date) = 1
+GROUP BY
+  drug.classification 
+ORDER BY
+  recalls DESC
+
+
+--Q16.  Just code for previous question
+# drug questions are in WEEK 4
