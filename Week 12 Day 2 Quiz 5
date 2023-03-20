@@ -1,0 +1,41 @@
+--Week 12 Quiz 5 Actual
+/*
+CREATE or REPLACE VIEW
+  `quiz5.vProduct`
+AS
+*/
+SELECT
+ -- Several ways to convert the null v_code's to 'In-House'
+
+-- One way is using:  IFNULL(CAST(vend.v_code STRING), 'In-House') AS vode
+
+-- Another way is using a CASE statement to do the conversion
+
+-- Note: we need to cast v_code to a string because it is stored as an INT64 in the raw data
+
+  CASE 
+    WHEN CAST(vend.V_CODE AS STRING) IS NULL THEN 'In-House' 
+      ELSE CAST(vend.v_code AS STRING)
+      END AS vcode,
+  CASE
+    WHEN vend.v_name IS NULL THEN 'In-House' 
+      ELSE vend.v_NAME
+      END AS vname,
+vend.v_name,
+vend.v_contact,
+COUNT(DISTINCT prod.p_code) as vendProds,
+ROUND(SUM(prod.P_PRICE * prod.P_QOH),2) AS vendValue,
+MAX(prod.p_qoh) as maxQty,
+MIN(prod.p_qoh) as minQty,
+ROUND(AVG(prod.p_qoh),2) as avgQty
+
+FROM 
+  `symmetric-aura-337805.SaleCoDB.product`  as prod
+  LEFT JOIN
+    `symmetric-aura-337805.SaleCoDB.vendor`  as vend
+  ON
+  prod.v_code = vend.v_code
+GROUP BY
+vend.v_code,
+vend.v_name,
+vend.v_contact
