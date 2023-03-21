@@ -1,0 +1,131 @@
+--Final
+SELECT
+  CASE
+    WHEN CAST(cust.CUS_LNAME AS STRING) IS NULL THEN "Grand Total"
+      ELSE CAST(cust.CUS_LNAME AS STRING)
+      END AS NAME,
+  CASE
+    WHEN CAST(inv.INV_NUMBER AS STRING) IS NULL THEN "Cust Total"
+      ELSE CAST(cust.CUS_LNAME AS STRING)
+      END AS INVOICE,
+  inv.INV_NUMBER,
+  line.LINE_NUMBER,
+  round(sum(line.LINE_UNITS * line.LINE_PRICE),2) as Revenue
+FROM
+  `symmetric-aura-337805.SaleCoDB.line` as line
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    ON
+    line.INV_NUMBER = inv.INV_NUMBER
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.customer` as cust
+      ON
+      cust.CUS_CODE = inv.CUS_CODE
+GROUP BY
+  ROLLUP(
+  cust.CUS_LNAME,
+  inv.INV_NUMBER,
+  line.LINE_NUMBER
+  )
+ORDER BY
+  Revenue DESC,
+  cust.CUS_LNAME
+;
+
+SELECT
+  cust.CUS_CODE,
+  cust.CUS_LNAME,
+  COUNT(inv.INV_NUMBER) as noInvoices
+FROM
+  `symmetric-aura-337805.SaleCoDB.customer` as cust
+  LEFT JOIN
+    `symmetric-aura-337805.SaleCoDB.invoice` as inv
+    ON
+    cust.CUS_CODE = inv.CUS_CODE
+GROUP BY
+  cust.CUS_CODE,
+  cust.CUS_LNAME
+ORDER BY
+  cust.CUS_LNAME
+;
+SELECT
+  DISTINCT inv.CUS_CODE,
+  prod.V_CODE
+FROM
+  `symmetric-aura-337805.SaleCoDB.invoice` as inv
+  INNER JOIN
+    `symmetric-aura-337805.SaleCoDB.line` as line
+    ON
+    inv.INV_NUMBER = line.INV_NUMBER
+    INNER JOIN
+      `symmetric-aura-337805.SaleCoDB.product` as prod
+      ON
+      line.P_CODE = prod.P_CODE
+WHERE
+  prod.V_CODE IN (21344, 21225)
+GROUP BY
+  inv.CUS_CODE,
+  prod.V_CODE
+;
+SELECT
+  ncaa.venue_state,
+  count(ncaa.code_ncaa) as count
+FROM
+  `bigquery-public-data.ncaa_basketball.mbb_teams` as ncaa
+GROUP BY
+  ncaa.venue_state 
+ORDER BY
+  count desc
+;
+SELECT 
+  emp.year,
+  EXTRACT(QUARTER FROM emp.date) as quarter, 
+  ROUND(AVG(emp.value),2) as avgPriceIndex
+FROM 
+  `bigquery-public-data.bls.employment_hours_earnings` as emp
+WHERE
+  emp.year = 2018 AND period != 'M13'
+GROUP BY 
+  emp.year,
+  quarter
+ORDER BY
+  quarter
+;
+SELECT
+   noaa.month,
+   ROUND(AVG(noaa.air_temperature),2) as moAvgTemp,
+   (SELECT
+      ROUND(AVG(noaa.air_temperature),2)
+    FROM
+      `bigquery-public-data.noaa_icoads.icoads_core_2015`as noaa
+    ) as ovAvgTemp
+FROM
+  `bigquery-public-data.noaa_icoads.icoads_core_2015`as noaa
+GROUP BY
+  noaa.month
+HAVING
+   moAvgTemp
+   >
+   ovAvgTemp
+ORDER BY
+   moAvgTemp DESC
+;
+
+SELECT
+  COALESCE(games.venueName, "GrandTotal") AS Venue,
+  CASE
+    WHEN games.venueName IN ('Rogers Centre','Coors Field','Fenway Park','Great American Ball Park','Angel Stadium of Anaheim') THEN 'Top5HitPark'
+    ELSE "Other"
+    END AS parkType,
+  SUM(games.homeFinalRuns + games.awayFinalRuns) as runs,
+  SUM(games.homeFinalHits + games.awayFinalHits) as hits,
+  ROUND((SUM(games.homeFinalRuns + games.awayFinalRuns))/SUM(games.homeFinalHits + games.awayFinalHits),2) AS ratio
+FROM
+  `bigquery-public-data.baseball.games_wide` as games
+GROUP BY
+  ROLLUP(
+  parkType,
+  games.venueName
+  )
+ORDER BY
+  hits DESC
